@@ -5,6 +5,8 @@ import "core:log"
 import "core:encoding/xml"
 import "core:os"
 
+//Various utilities for dealing with XML files
+
 // Helper: Get attribute value from an element
 // Returns empty string if attribute doesn't exist
 get_attrib :: proc(element: ^xml.Element, key: string) -> string {
