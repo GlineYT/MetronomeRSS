@@ -1,6 +1,5 @@
 package mrssparser
 
-import "core:fmt"
 import "core:log"
 import "core:encoding/xml"
 import "core:os"

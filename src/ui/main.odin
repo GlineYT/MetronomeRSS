@@ -1,6 +1,5 @@
 package mrssui
 
-import "core:fmt"
 import "core:log"
 import parser "../parser"
 
@@ -8,7 +7,7 @@ main :: proc() {
 	context.logger = log.create_console_logger()
 	log.debug("Console logger created")
 
-	path := "/home/kingmarkoxiv/Desktop/UKTC/other_files/randomcode/odin/Metronome RSS/test/sample-rss-091.xml"
+	path := "/home/kingmarkoxiv/Desktop/UKTC/other_files/randomcode/odin/Metronome RSS/test/sample.xml"
 
 	log.infof("Metronome RSS started")
 	log.infof("Attempting to load example RSS feed: %s", path)
@@ -45,5 +44,6 @@ main :: proc() {
 
 	// Begin parsing
 	log.infof("Attempting parse")
+	feedData := parser.parsefeed(doc,feed_type)
 
 }
