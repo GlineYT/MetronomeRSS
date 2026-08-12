@@ -7,7 +7,7 @@ main :: proc() {
 	context.logger = log.create_console_logger()
 	log.debug("Console logger created")
 
-	path := "/home/kingmarkoxiv/Desktop/UKTC/other_files/randomcode/odin/Metronome RSS/test/sample.xml"
+	path := "/home/kingmarkoxiv/Desktop/UKTC/other_files/randomcode/odin/Metronome RSS/test/entity-test.rss"
 
 	log.infof("Metronome RSS started")
 	log.infof("Attempting to load example RSS feed: %s", path)
@@ -46,4 +46,15 @@ main :: proc() {
 	log.infof("Attempting parse")
 	feedData := parser.parsefeed(doc,feed_type)
 
+	//Post process
+	if feedData.feed_type == "RSS" {
+		if rss_channel, ok := feedData.rss.?; ok {
+			// POST-PROCESS: Decode entities
+			parser.post_process_rss_channel(&rss_channel)
+			feedData.rss = rss_channel
+
+			// Now you have clean text
+			log.infof("Cleaned text: %v", feedData)
+		}
+	}
 }

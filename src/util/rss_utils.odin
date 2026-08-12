@@ -1,9 +1,6 @@
 package mrssutil
 
-import "core:fmt"
-import "core:log"
 import "core:encoding/xml"
-import "core:os"
 
 
 //Various utilities for dealing with RSS feeds

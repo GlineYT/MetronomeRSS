@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+    <channel>
+        <!-- ✅ Use actual Unicode characters -->
+        <title>Entity Test Feed • © ™</title>
+        <link>http://example.com/entity-test feed</link>
+        <description>Testing "HTML" entities 'spam' edition  &  © ® ™ — – … • € £ ¥ ¢</description>
+
+            <!-- Or use numeric entities -->
+            <description>Testing &#34;HTML&#34; entities &#39;spam&#39; edition &#60;fun&#62; &#38; &#160; &#169; &#174; &#8482; &#8212; &#8211; &#8230; &#8226; &#8364; &#163; &#165; &#162;</description>
+        </channel>
+    </rss>

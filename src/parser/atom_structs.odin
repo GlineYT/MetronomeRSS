@@ -1,8 +1,6 @@
 package mrssparser
 
-import "core:time"
 import "base:runtime"
-import util "../util"
 
 
 // Atom Person (author/contributor)

@@ -76,8 +76,7 @@ parse_rss_channel :: proc(doc: ^xml.Document) -> RSSChannel {
 	// Parse items
 	//channel.items = parse_rss_items(doc, channel_id)
 
-	log.infof("Finished parsing channel data, struct:",channel)
-
+	log.infof("Finished parsing channel data, struct: %v", channel)
 
 	return channel
 }
