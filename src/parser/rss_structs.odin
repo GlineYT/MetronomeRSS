@@ -42,7 +42,7 @@ RSSChannel :: struct {
     categories: []RSSCategory,  // List of categories
 
     // === IMAGE ===
-    image: runtime.Maybe(RSSImage),      // ✅ Fixed: Optional feed logo
+    image: runtime.Maybe(RSSImage),      //  Optional feed logo
 
     // === ITEMS ===
     items: []RSSItem,
@@ -52,12 +52,12 @@ RSSChannel :: struct {
     feed_type: string, // "RSS" (for identification)
 }
 
-// RSS Enclosure (for podcasts/media)
-RSSEnclosure :: struct {
-    url:    string,
-    length: i64,    // In bytes
-    type:   string, // MIME type, e.g., "audio/mpeg"
-}
+    // RSS Enclosure (for podcasts/media)
+    RSSEnclosure :: struct {
+        url:    string,
+        length: i64,    // In bytes
+        type:   string, // MIME type, e.g., "audio/mpeg"
+    }
 
 // RSS Item
 RSSItem :: struct {
@@ -81,6 +81,4 @@ RSSItem :: struct {
 
     // === METADATA ===
     source:     string,  // Syndication source
-    is_read:    bool,    // Reader state (not from RSS)
-    is_starred: bool,    // Reader state (not from RSS)
 }

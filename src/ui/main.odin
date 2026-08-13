@@ -7,54 +7,19 @@ main :: proc() {
 	context.logger = log.create_console_logger()
 	log.debug("Console logger created")
 
-	path := "/home/kingmarkoxiv/Desktop/UKTC/other_files/randomcode/odin/Metronome RSS/test/entity-test.rss"
+	path := "/home/kingmarkoxiv/Desktop/UKTC/other_files/randomcode/odin/Metronome RSS/test/sample 2.xml"
 
 	log.infof("Metronome RSS started")
-	log.infof("Attempting to load example RSS feed: %s", path)
 
-	//Load the file
-	doc, xml_err, load_code := parser.loadfeed(path)
-	if load_code != "INF_ALL_OK" {
-		log.errorf("Failed to load feed: %s (code: %s)", path, load_code)
-		if xml_err != nil {
-			log.errorf("XML error: %v", xml_err)
-		}
+	// Call the pipeline
+	feedData, success, err_code := parser.feedpipeline(path)
+	if !success {
+		log.errorf("Pipeline failed: %s", err_code)
 		return
 	}
-	log.infof("Feed loaded successfully: %s", load_code)
 
-	// Detect the type
-	feed_type, valid,validate_error := parser.validatefeed(doc, path) //Returns feed type and validity thereof, takes document pointer and path
-	if !valid {
-		log.errorf("Invalid feed format: %s", path)
-		return
-	}
-	log.infof("Detected feed type: %s", feed_type)
+	log.infof("Pipeline succeeded! Feed type: %s", feedData.feed_type)
 
-	//Check the fields
-	fields_valid, err_code := parser.checkFields(doc, path, feed_type) //Returns field validity,error code if any
-	if !fields_valid {
-		log.errorf("Feed validation failed: %s", err_code)
-		return
-	}
-	log.infof("All required fields present: %s", err_code)
-
-	// In case of sucess
-	log.infof("Feed loaded and validated successfully!")
-
-	// Begin parsing
-	log.infof("Attempting parse")
-	feedData := parser.parsefeed(doc,feed_type)
-
-	//Post process
-	if feedData.feed_type == "RSS" {
-		if rss_channel, ok := feedData.rss.?; ok {
-			// POST-PROCESS: Decode entities
-			parser.post_process_rss_channel(&rss_channel)
-			feedData.rss = rss_channel
-
-			// Now you have clean text
-			log.infof("Cleaned text: %v", feedData)
-		}
-	}
+	// Now you can use the feedData for UI rendering
+	// render_ui(feedData)
 }
