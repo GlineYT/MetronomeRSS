@@ -1,4 +1,4 @@
-This project, it's contributors and maintainers are expected to hold themselves to the XEE code of conduct as best they can. 
+This project, it's contributors and maintainers are expected to hold themselves to the Metronome RSS code of conduct as best they can. 
 
 the CoC is based on the SQLite code of ethics: https://sqlite.org/codeofethics.html
 

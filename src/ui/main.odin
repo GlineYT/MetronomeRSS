@@ -7,7 +7,7 @@ main :: proc() {
 	context.logger = log.create_console_logger()
 	log.debug("Console logger created")
 
-	path := "/home/kingmarkoxiv/Desktop/UKTC/other_files/randomcode/odin/Metronome RSS/test/sample 2.xml"
+	path := "/home/kingmarkoxiv/Desktop/UKTC/other_files/randomcode/odin/Metronome RSS/test/testfeed-atom-v1.atom"
 
 	log.infof("Metronome RSS started")
 

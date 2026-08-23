@@ -22,14 +22,14 @@ parsefeed :: proc(doc: ^xml.Document, feedType: string) -> FeedData {
 		}
 
 		// Check if it's Atom
-		//if feedType == "Atom_0_3" || feedType == "Atom_1_0" {
-			//log.infof("Feed is Atom type. Parsing entries.")
-			// feed := parse_atom_feed(doc)
-			//return FeedData{
-			//	atom = feed,
-			//	feed_type = "Atom",
-			//}
-		//}
+		if feedType == "Atom_0_3" || feedType == "Atom_1_0" {
+			log.infof("Feed is Atom type. Parsing entries.")
+			feed := parse_atom_feed(doc)
+			return FeedData{
+				atom = feed,
+				feed_type = "Atom",
+			}
+		}
 
 		// Unknown type - return empty
 		log.errorf("Unknown feed type for parsing: %s", feedType)
@@ -200,4 +200,195 @@ default_random_generator :: proc() -> runtime.Random_Generator {
 }
 
 
-// TODO: Atom parsing
+// Atom parsing
+parse_atom_feed :: proc(doc: ^xml.Document) -> AtomFeed {
+	log.infof("Parsing Atom feed")
+
+	feed := AtomFeed{
+		feed_type = "Atom",
+	}
+
+	root_id: u32 = 0
+	root := &doc.elements[root_id]
+
+	// Atom feed elements are direct children of the root
+	feed.title = util.get_text(doc, root_id, "title")
+	feed.id = util.get_text(doc, root_id, "id")
+	feed.updated = util.get_text(doc, root_id, "updated")
+	feed.subtitle = util.get_text(doc, root_id, "subtitle")
+	feed.rights = util.get_text(doc, root_id, "rights")
+	feed.generator = util.get_text(doc, root_id, "generator")
+	feed.icon = util.get_text(doc, root_id, "icon")
+	feed.logo = util.get_text(doc, root_id, "logo")
+
+	// Parse authors
+	feed.author = parse_atom_persons(doc, root_id, "author")
+
+	// Parse categories
+	feed.categories = parse_atom_categories(doc, root_id)
+
+	// Parse links
+	feed.link = parse_atom_link(doc, root_id)
+
+	// Parse entries
+	feed.entries = parse_atom_entries(doc, root_id)
+
+	log.infof("Finished parsing Atom feed: %s", feed.title)
+	return feed
+}
+
+// Parse Atom person elements (author, contributor)
+parse_atom_persons :: proc(doc: ^xml.Document, parent_id: u32, tag: string) -> []AtomPerson {
+	persons := make([dynamic]AtomPerson)
+	i := 0
+
+	for {
+		person_id, found := xml.find_child_by_ident(doc, parent_id, tag, i)
+		if !found { break }
+
+		person := AtomPerson{
+			name = util.get_text(doc, person_id, "name"),
+			email = util.get_text(doc, person_id, "email"),
+			uri = util.get_text(doc, person_id, "uri"),
+		}
+		append(&persons, person)
+		i += 1
+	}
+
+	return persons[:]
+}
+
+// Parse Atom categories
+parse_atom_categories :: proc(doc: ^xml.Document, parent_id: u32) -> []AtomCategory {
+	categories := make([dynamic]AtomCategory)
+	i := 0
+
+	for {
+		cat_id, found := xml.find_child_by_ident(doc, parent_id, "category", i)
+		if !found { break }
+
+		// Category attributes
+		cat_elem := &doc.elements[cat_id]
+		cat := AtomCategory{
+			term = util.get_attrib(cat_elem, "term"),
+			scheme = util.get_attrib(cat_elem, "scheme"),
+			label = util.get_attrib(cat_elem, "label"),
+		}
+		append(&categories, cat)
+		i += 1
+	}
+
+	return categories[:]
+}
+
+// Parse the main Atom link (rel="alternate")
+parse_atom_link :: proc(doc: ^xml.Document, parent_id: u32) -> AtomLink {
+	// Find the link with rel="alternate"
+	i := 0
+	for {
+		link_id, found := xml.find_child_by_ident(doc, parent_id, "link", i)
+		if !found { break }
+
+		link_elem := &doc.elements[link_id]
+		rel := util.get_attrib(link_elem, "rel")
+
+		if rel == "alternate" || rel == "" {
+			// This is the main link
+			return AtomLink{
+				href = util.get_attrib(link_elem, "href"),
+				rel = rel,
+				type = util.get_attrib(link_elem, "type"),
+				hreflang = util.get_attrib(link_elem, "hreflang"),
+				title = util.get_attrib(link_elem, "title"),
+				length = parse_length_attr(util.get_attrib(link_elem, "length")),
+			}
+		}
+		i += 1
+	}
+
+	return AtomLink{} // No alternate link found
+}
+
+// Parse Atom entries
+parse_atom_entries :: proc(doc: ^xml.Document, parent_id: u32) -> []AtomEntry {
+	entries := make([dynamic]AtomEntry)
+	i := 0
+
+	for {
+		entry_id, found := xml.find_child_by_ident(doc, parent_id, "entry", i)
+		if !found { break }
+
+		entry := parse_single_atom_entry(doc, entry_id)
+		append(&entries, entry)
+		i += 1
+	}
+
+	return entries[:]
+}
+
+// Parse a single Atom entry
+parse_single_atom_entry :: proc(doc: ^xml.Document, entry_id: u32) -> AtomEntry {
+	entry := AtomEntry{
+		title = util.get_text(doc, entry_id, "title"),
+		id = util.get_text(doc, entry_id, "id"),
+		updated = util.get_text(doc, entry_id, "updated"),
+		published = util.get_text(doc, entry_id, "published"),
+		summary = util.get_text(doc, entry_id, "summary"),
+		content = util.get_text(doc, entry_id, "content"),
+		is_read = false,
+		is_starred = false,
+	}
+
+	// Parse link
+	entry.link = parse_atom_entry_link(doc, entry_id)
+
+	// Parse authors
+	entry.author = parse_atom_persons(doc, entry_id, "author")
+
+	// Parse categories
+	entry.categories = parse_atom_categories(doc, entry_id)
+
+	// Parse source (optional)
+	source_id, found := xml.find_child_by_ident(doc, entry_id, "source", 0)
+	if found {
+		source := parse_atom_feed(doc) // Recursively parse source as a feed
+		entry.source = source
+	}
+
+	return entry
+}
+
+// Parse link for an entry (find the alternate link)
+parse_atom_entry_link :: proc(doc: ^xml.Document, parent_id: u32) -> AtomLink {
+	i := 0
+	for {
+		link_id, found := xml.find_child_by_ident(doc, parent_id, "link", i)
+		if !found { break }
+
+		link_elem := &doc.elements[link_id]
+		rel := util.get_attrib(link_elem, "rel")
+
+		if rel == "alternate" || rel == "" {
+			return AtomLink{
+				href = util.get_attrib(link_elem, "href"),
+				rel = rel,
+				type = util.get_attrib(link_elem, "type"),
+				hreflang = util.get_attrib(link_elem, "hreflang"),
+				title = util.get_attrib(link_elem, "title"),
+				length = parse_length_attr(util.get_attrib(link_elem, "length")),
+			}
+		}
+		i += 1
+	}
+
+	return AtomLink{} // No alternate link found
+}
+
+// Helper: parse length attribute from string
+parse_length_attr :: proc(length_str: string) -> i64 {
+	if length_str == "" {
+		return 0
+	}
+	val, _ := strconv.parse_i64(length_str)
+	return val
+}
