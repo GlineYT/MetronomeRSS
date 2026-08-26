@@ -57,12 +57,18 @@ Those can be from the Loading, Validating, Parsing or Rendering steps, aswell as
 | `ERR_NO_IDN` | Missing `<id>` element. Required in Atom feeds for unique identification. |
 | `ERR_NO_UPD` | Missing `<updated>` element. Required in Atom feeds for timestamp tracking. |
 
+### Variable Format Errors - Incorrect Variable Types
+
+| Code | Description |
+|------|-------------|
+| `ERR_INV_TPE` | Incorrect variable type. User provided a incorrect variable type. |
+
+
 ### Unknown/Uncategorized Errors
 
 | Code | Description |
 |------|-------------|
 | `ERR_UNK_ERR` | Unknown or uncategorized error. Used as a fallback when no specific error code applies. |
-
 ---
 
 ## Warning Codes (WRN_)

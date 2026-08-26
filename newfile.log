@@ -1,0 +1,5 @@
+ [DEBUG] test_logging in feedLoader.py:11: Harmless debug message
+ [INFO] test_logging in feedLoader.py:12: Just an information
+ [WARNING] test_logging in feedLoader.py:13: Its a warning
+ [ERROR] test_logging in feedLoader.py:14: Did you try to divide by zero?
+ [CRITICAL] test_logging in feedLoader.py:15: Internet is down

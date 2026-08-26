@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+    <channel>
+        <title>Entity Test Feed • © ™</title>
+        <link>http://example.com/entity-test-feed</link>
+        <description>Testing "HTML" entities 'spam' edition &lt;fun&gt; &amp;  © ® ™ — – … • € £ ¥ ¢</description>
+        <language>en-us</language>
+        <lastBuildDate>Mon, 01 Jan 2024 12:00:00 GMT</lastBuildDate>
+        <generator>Entity Spammer 9000 ™</generator>
+        <copyright>© 2024 Entity Test Industries ®</copyright>
+        <docs>http://example.com/docs-about-entities</docs>
+        <managingEditor>test's editor email@example.com</managingEditor>
+        <webMaster>webmaster@example.com</webMaster>
+
+        <item>
+            <title>HTML Formatting — "Test" Article</title>
+            <link>http://example.com/item1</link>
+            <description>
+                <![CDATA[
+                <h1>HTML Formatting in RSS • © 2024</h1>
+                <p>This article demonstrates <b>bold</b>, <i>italic</i>, and <u>underline</u> formatting.</p>
+                <ul>
+                    <li>© Copyrighted content</li>
+                    <li>® Registered trademark</li>
+                    <li>™ Trademark</li>
+                </ul>
+                <p>Currency: € £ ¥ ¢</p>
+                <p>Punctuation: — – … •</p>
+                ]]>
+            </description>
+            <pubDate>Mon, 01 Jan 2024 12:00:00 GMT</pubDate>
+        </item>
+
+        <item>
+            <title>Mixed Content — Simple Test</title>
+            <link>http://example.com/item2</link>
+            <description>
+                <![CDATA[
+                <p>This is a paragraph with <b>bold</b> and <i>italic</i> text.</p>
+                <p>Entities: &amp; &lt; &gt; &quot; &apos;</p>
+                <p>Currency: € £ ¥ ¢</p>
+                <p>© 2024 All Rights Reserved ®</p>
+                ]]>
+            </description>
+            <pubDate>Tue, 02 Jan 2024 12:00:00 GMT</pubDate>
+        </item>
+    </channel>
+</rss>
