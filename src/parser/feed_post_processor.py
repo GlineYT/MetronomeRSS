@@ -1,5 +1,7 @@
 import html
+import logging
 
+logger = logging.getLogger(__name__)
 def recursive_unescape(data, max_iterations=3):
     """Recursively unescape HTML entities with multiple passes."""
     if isinstance(data, str):

@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Optional
+from typing import Optional, TypedDict
 
 # ============================================================
 # ATOM STRUCTS (Python TypedDict version)
@@ -40,10 +40,10 @@ class AtomEntry(TypedDict):
     published: str
     summary: str
     content: str
-    author: List[AtomPerson]
+    author: list[AtomPerson]
 
     # Optional
-    categories: List[AtomCategory]
+    categories: list[AtomCategory]
     source: Optional['AtomFeed']  # Self-referential type
 
     # Reader State
@@ -61,15 +61,15 @@ class AtomFeed(TypedDict):
 
     # Recommended
     subtitle: str
-    author: List[AtomPerson]
+    author: list[AtomPerson]
     icon: str
     logo: str
     rights: str
     generator: str
 
     # Optional
-    categories: List[AtomCategory]
-    entries: List[AtomEntry]
+    categories: list[AtomCategory]
+    entries: list[AtomEntry]
 
     # Metadata
     feed_type: str

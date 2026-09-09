@@ -1,15 +1,14 @@
 #file that validates a feed
-import xml.etree.ElementTree as ET
 import logging
 
 #Validates a RSS feed for validity.
-
+logger = logging.getLogger(__name__)
 #Namespace declaration
 ATOM_NS = "{http://www.w3.org/2005/Atom}"
 
 #Check if the root element exists, and what type of feed it is
 def validateFeedType(RSStree,path):
-    logging.info(" Beginning feed validation")
+    logger.info(" Beginning feed validation")
     #Default values
     feedType = "Unknown"
     valid = False
@@ -17,18 +16,18 @@ def validateFeedType(RSStree,path):
 
     #Root of the file
     root = RSStree.getroot()
-    logging.info("Root element:" + root.tag)
+    logger.info("Root element:" + root.tag)
     print(root.tag)
 
     #check for RSS
     if root.tag == "rss":
-        logging.info("feed is of type RSS")
+        logger.info("feed is of type RSS")
         #get the version
         version = root.attrib["version"] #root.attrib is a dict, so the "version" key is to be taken
-        logging.info(f"RSS Feed version is: {version}")
+        logger.info(f"RSS Feed version is: {version}")
 
         if version == "0.90":
-                logging.info("Valid RSS 0.90 from file: " + path)
+                logger.info("Valid RSS 0.90 from file: " + path)
                 feedType = "RSS_0_90"
                 valid = True
                 error = "INF_ALL_OK"
@@ -36,28 +35,28 @@ def validateFeedType(RSStree,path):
 
 
         elif version == "0.91":
-                logging.info("Valid RSS 0.91 from file: " + path)
+                logger.info("Valid RSS 0.91 from file: " + path)
                 feedType = "RSS_0_91"
                 valid = True
                 error = "INF_ALL_OK"
                 return feedType, valid, error
 
         elif version == "0.92":
-                logging.info("Valid RSS 0.92 from file:" + path)
+                logger.info("Valid RSS 0.92 from file:" + path)
                 feedType = "RSS_0_92"
                 valid = True
                 error = "INF_ALL_OK"
                 return feedType, valid, error
 
         elif version == "2.0":
-                logging.info("Valid RSS 2.0 from file:" + path)
+                logger.info("Valid RSS 2.0 from file:" + path)
                 feedType = "RSS_2_0"
                 valid = True
                 error = "INF_ALL_OK"
                 return feedType, valid, error
 
         else:
-                logging.error(f"Unknown RSS version {version}  in file:  {path}")
+                logger.error(f"Unknown RSS version {version}  in file:  {path}")
                 feedType = "Unknown"
                 valid = False
                 error = "ERR_UNK_RSS"
@@ -66,7 +65,7 @@ def validateFeedType(RSStree,path):
 
     #check for Atom
     elif root.tag == "{http://www.w3.org/2005/Atom}feed":
-        logging.info("feed is of type Atom")
+        logger.info("feed is of type Atom")
         #get the version
         feedType = "Atom_1_0"
         valid = True
@@ -75,7 +74,7 @@ def validateFeedType(RSStree,path):
 
     #If it's neither'
     elif root.tag != "rss" or root.tag != "{http://www.w3.org/2005/Atom}feed":
-        logging.error("Unknown feed type")
+        logger.error("Unknown feed type")
         return feedType,valid,error,root
 
 def validateFields(RSStree, feedType, path):
@@ -91,102 +90,102 @@ def validateFields(RSStree, feedType, path):
         valid: Boolean indicating if all required fields are present
         error: String error code or "INF_ALL_OK" if successful
     """
-    logging.info(f"Validating fields for feed from {path} of type {feedType}")
+    logger.info(f"Validating fields for feed from {path} of type {feedType}")
 
     root = RSStree.getroot()
 
     # RSS FEEDS
     if feedType in ("RSS_0_90", "RSS_0_91", "RSS_0_92", "RSS_1_0", "RSS_2_0"):
 
-        logging.info(f"Checking for channel in RSS feed from file: {path}")
+        logger.info(f"Checking for channel in RSS feed from file: {path}")
 
         # Check for channel
         channel = root.find("channel")
         if channel is None:
-            logging.error(f"No channel found in file: {path}")
+            logger.error(f"No channel found in file: {path}")
             return False, "ERR_NO_CNL"
         else:
-            logging.info("Channel tag present.")
+            logger.info("Channel tag present.")
 
         # Check for title
         if channel.find("title") is None:
-            logging.error(f"No <title> found in channel (file: {path})")
+            logger.error(f"No <title> found in channel (file: {path})")
             return False, "ERR_NO_TTL"
         else:
-            logging.info("Title tag present.")
+            logger.info("Title tag present.")
 
         # Check for description
         if channel.find("description") is None:
-            logging.error(f"No <description> found in channel (file: {path})")
+            logger.error(f"No <description> found in channel (file: {path})")
             return False, "ERR_NO_DSC"
         else:
-            logging.info("Description tag present.")
+            logger.info("Description tag present.")
 
         # Check for link
         if channel.find("link") is None:
-            logging.error(f"No <link> found in channel (file: {path})")
+            logger.error(f"No <link> found in channel (file: {path})")
             return False, "ERR_NO_LNK"
         else:
-            logging.info("Link tag present.")
+            logger.info("Link tag present.")
 
         # RSS 0.91 requires language
         if feedType == "RSS_0_91":
-            logging.info("RSS 0.91 feed detected, checking for <language>")
+            logger.info("RSS 0.91 feed detected, checking for <language>")
             if channel.find("language") is None:
-                logging.warning(f"RSS 0.91 feed missing <language> (file: {path})")
+                logger.warning(f"RSS 0.91 feed missing <language> (file: {path})")
                 error = "WRN_NO_LNG"  # Warning only
                 # Don't return - let it continue
             else:
-                logging.info("Language tag present.")
+                logger.info("Language tag present.")
 
         # RSS 1.0 requires RDF namespace
         if feedType == "RSS_1_0":
-            logging.info("RSS 1.0 feed detected, checking for RDF namespace")
+            logger.info("RSS 1.0 feed detected, checking for RDF namespace")
             rdf_ns = root.get("xmlns:rdf", "")
             if rdf_ns != "http://www.w3.org/1999/02/22-rdf-syntax-ns#":
-                logging.error(f"RSS 1.0 feed missing or incorrect RDF namespace (file: {path})")
+                logger.error(f"RSS 1.0 feed missing or incorrect RDF namespace (file: {path})")
                 return False, "ERR_NO_RDF"
-            logging.info("RDF namespace present.")
+            logger.info("RDF namespace present.")
 
         # All RSS checks passed
-        logging.info(f"All checks passed")
-        return True, "INF_ALL_OK"
+        logger.info("All checks passed")
+        return True, error if error != "" else "INF_ALL_OK"
 
     # ATOM FEEDS
     elif feedType in ("Atom_0_3", "Atom_1_0"):
-        logging.info(f"Checking Atom feed: {path}")
+        logger.info(f"Checking Atom feed: {path}")
 
         # Atom requires: title, link, id, updated
         if root.find(f"{ATOM_NS}title") is None:
-            logging.error(f"No <title> found in Atom feed (file: {path})")
+            logger.error(f"No <title> found in Atom feed (file: {path})")
             return False, "ERR_NO_TTL"
         else:
-            logging.info("Title tag present.")
+            logger.info("Title tag present.")
 
         if root.find(f"{ATOM_NS}link") is None:
-            logging.error(f"No <link> found in Atom feed (file: {path})")
+            logger.error(f"No <link> found in Atom feed (file: {path})")
             return False, "ERR_NO_LNK"
         else:
-            logging.info("Link tag present.")
+            logger.info("Link tag present.")
 
         if root.find(f"{ATOM_NS}id") is None:
-            logging.error(f"No <id> found in Atom feed (file: {path})")
+            logger.error(f"No <id> found in Atom feed (file: {path})")
             return False, "ERR_NO_IDN"
         else:
-            logging.info("ID tag present.")
+            logger.info("ID tag present.")
 
         if root.find(f"{ATOM_NS}updated") is None:
-            logging.error(f"No <updated> found in Atom feed (file: {path})")
+            logger.error(f"No <updated> found in Atom feed (file: {path})")
             return False, "ERR_NO_UPD"
         else:
-            logging.info("Updated tag present.")
+            logger.info("Updated tag present.")
 
         # All Atom checks passed
-        logging.info(f"All checks passed")
+        logger.info("All checks passed")
         return True, "INF_ALL_OK"
 
 
     # UNKNOWN FEED TYPE
     else:
-        logging.error(f"Unknown feed type in validateFields: {feedType} (file: {path})")
+        logger.error(f"Unknown feed type in validateFields: {feedType} (file: {path})")
         return False, "ERR_UNK_FEED"

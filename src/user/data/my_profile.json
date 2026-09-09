@@ -1,0 +1,296 @@
+{
+    "metadata": {
+        "guid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "created_date": "2024-01-15",
+        "created_time": "14:30:00",
+        "modified_date": "2026-08-31",
+        "modified_time": "21:45:30"
+    },
+    "preferences": {
+        "color_theme": {
+            "r": 30,
+            "g": 144,
+            "b": 255
+        },
+        "language": "en",
+        "favourites": [
+            "https://news.ycombinator.com/rss",
+            "https://lobste.rs/rss",
+            "https://www.reddit.com/r/programming/.rss",
+            "https://www.theguardian.com/world/rss"
+        ],
+        "read_items": [
+            "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "b2c3d4e5-f6a7-8901-bcde-f234567890ab"
+        ],
+        "bookmarked_items": [
+            "c3d4e5f6-a7b8-9012-cdef-34567890abcd",
+            "d4e5f6a7-b8c9-0123-def4-567890abcdef"
+        ],
+        "user_dir": "/home/user/MetronomeRSS/Profiles/Default",
+        "caching_enabled": true,
+        "update_interval": 30,
+        "categories": [
+            {
+                "name": "Technology",
+                "icon": "https://example.com/icons/tech.png",
+                "bind_patterns": [
+                    "tech",
+                    "software",
+                    "programming",
+                    "AI",
+                    "coding",
+                    "developer",
+                    "cybersecurity",
+                    "cloud",
+                    "devops",
+                    "machine learning"
+                ],
+                "is_default": false
+            },
+            {
+                "name": "News",
+                "icon": "https://example.com/icons/news.png",
+                "bind_patterns": [
+                    "news",
+                    "breaking",
+                    "update",
+                    "report",
+                    "politics",
+                    "world",
+                    "local",
+                    "headlines",
+                    "current events"
+                ],
+                "is_default": false
+            },
+            {
+                "name": "Science",
+                "icon": "https://example.com/icons/science.png",
+                "bind_patterns": [
+                    "science",
+                    "space",
+                    "biology",
+                    "physics",
+                    "chemistry",
+                    "astronomy",
+                    "neuroscience",
+                    "medicine",
+                    "research",
+                    "study"
+                ],
+                "is_default": false
+            },
+            {
+                "name": "Default",
+                "icon": "file:///usr/share/icons/default-feed.png",
+                "bind_patterns": [
+                    "feed",
+                    "rss",
+                    "atom",
+                    "blog",
+                    "articles"
+                ],
+                "is_default": true
+            }
+        ],
+        "blacklist": [
+            "spam-site.com",
+            "clickbait-news.net",
+            "fake-news.biz",
+            "malware-feeds.xyz",
+            "tracker-analytics.io"
+        ]
+    },
+    "feeds": [
+        {
+            "link": "https://news.ycombinator.com/rss",
+            "category": "Technology",
+            "language": "en",
+            "items": [
+                {
+                    "guid": "a1b2c3d4-e5f6-7890-abcd-ef1234567891",
+                    "title": "Rust Foundation Announces Major Grant for Alternative Compiler Backend",
+                    "link": "https://news.ycombinator.com/item?id=12345678",
+                    "description": "The Rust Foundation has awarded a major grant to develop an alternative compiler backend targeting LLVM alternatives. The project aims to reduce dependency on LLVM and improve compilation times for Rust code.",
+                    "pub_date": "2026-08-31T18:30:00Z",
+                    "categories": [
+                        "Programming",
+                        "Rust",
+                        "Open Source"
+                    ],
+                    "is_read": false,
+                    "is_bookmarked": true
+                },
+                {
+                    "guid": "b2c3d4e5-f6a7-8901-bcde-f234567890ab",
+                    "title": "Show HN: A New RSS Reader Built with Python and Odin",
+                    "link": "https://news.ycombinator.com/item?id=12345679",
+                    "description": "A cross-platform RSS reader that leverages Python for its UI and XML parsing, while using Odin for the low-level feed processing engine. The project aims to provide a fast and minimalistic RSS reading experience.",
+                    "pub_date": "2026-08-30T14:20:00Z",
+                    "categories": [
+                        "RSS",
+                        "Python",
+                        "Odin"
+                    ],
+                    "is_read": false,
+                    "is_bookmarked": false
+                },
+                {
+                    "guid": "c3d4e5f6-a7b8-9012-cdef-34567890abcd",
+                    "title": "PostgreSQL 18 Released with Major Performance Improvements",
+                    "link": "https://news.ycombinator.com/item?id=12345680",
+                    "description": "PostgreSQL 18 is now available, featuring parallel query execution across multiple databases, improved JSONB performance with new operators, and a built-in vector search extension for AI applications.",
+                    "pub_date": "2026-08-29T09:15:00Z",
+                    "categories": [
+                        "Database",
+                        "PostgreSQL",
+                        "Open Source"
+                    ],
+                    "is_read": true,
+                    "is_bookmarked": false
+                },
+                {
+                    "guid": "d4e5f6a7-b8c9-0123-def4-567890abcdef",
+                    "title": "AI-Generated Code Is Now Responsible for 35% of GitHub Commits",
+                    "link": "https://news.ycombinator.com/item?id=12345681",
+                    "description": "A recent study shows that AI-powered code generation tools now account for 35% of all commits on GitHub, up from just 5% two years ago. The trend is particularly strong in Python and JavaScript ecosystems.",
+                    "pub_date": "2026-08-28T22:45:00Z",
+                    "categories": [
+                        "AI",
+                        "GitHub",
+                        "Programming"
+                    ],
+                    "is_read": true,
+                    "is_bookmarked": true
+                }
+            ]
+        },
+        {
+            "link": "https://lobste.rs/rss",
+            "category": "Technology",
+            "language": "en",
+            "items": [
+                {
+                    "guid": "e5f6a7b8-c9d0-1234-def5-67890abcdef0",
+                    "title": "How Odin Compares to Rust, Zig, and C in Systems Programming",
+                    "link": "https://lobste.rs/s/12345",
+                    "description": "A comprehensive comparison of Odin, Rust, Zig, and C for systems programming. The article explores productivity, performance, safety, and ecosystem maturity across these languages.",
+                    "pub_date": "2026-08-31T16:00:00Z",
+                    "categories": [
+                        "Programming",
+                        "Odin",
+                        "Systems"
+                    ],
+                    "is_read": false,
+                    "is_bookmarked": true
+                },
+                {
+                    "guid": "f6a7b8c9-d0e1-2345-ef67-890abcdef012",
+                    "title": "Building a Full-Stack Application with HTMX and Go",
+                    "link": "https://lobste.rs/s/12346",
+                    "description": "A tutorial on building interactive web applications using HTMX for the frontend and Go for the backend. The article covers real-time updates, WebSockets, and graceful degradation.",
+                    "pub_date": "2026-08-30T11:30:00Z",
+                    "categories": [
+                        "Web",
+                        "Go",
+                        "HTMX"
+                    ],
+                    "is_read": false,
+                    "is_bookmarked": false
+                }
+            ]
+        },
+        {
+            "link": "https://www.reddit.com/r/programming/.rss",
+            "category": "Technology",
+            "language": "en",
+            "items": [
+                {
+                    "guid": "a7b8c9d0-e1f2-3456-7890-abcdef012345",
+                    "title": "I Spent a Month Optimizing My Python Application and Here's What I Learned",
+                    "link": "https://www.reddit.com/r/programming/comments/12345",
+                    "description": "A detailed post about optimizing Python applications using profiling, C extensions, async patterns, and memory optimization techniques. The author reduced execution time by 80%.",
+                    "pub_date": "2026-08-31T20:00:00Z",
+                    "categories": [
+                        "Python",
+                        "Performance",
+                        "Optimization"
+                    ],
+                    "is_read": false,
+                    "is_bookmarked": false
+                },
+                {
+                    "guid": "b8c9d0e1-f2a3-4567-89ab-cdef01234567",
+                    "title": "Why I Switched from VS Code to Neovim",
+                    "link": "https://www.reddit.com/r/programming/comments/12346",
+                    "description": "A developer explains their journey from VS Code to Neovim, covering the learning curve, customization, and the benefits of modal editing for large codebases.",
+                    "pub_date": "2026-08-29T07:00:00Z",
+                    "categories": [
+                        "Editors",
+                        "Vim",
+                        "Productivity"
+                    ],
+                    "is_read": true,
+                    "is_bookmarked": false
+                }
+            ]
+        },
+        {
+            "link": "https://www.theguardian.com/world/rss",
+            "category": "News",
+            "language": "en",
+            "items": [
+                {
+                    "guid": "c9d0e1f2-a3b4-5678-9abc-def012345678",
+                    "title": "Global Climate Summit Reaches Historic Agreement on Emissions Reduction",
+                    "link": "https://www.theguardian.com/world/2026/12345",
+                    "description": "World leaders have reached a historic agreement to reduce global emissions by 50% by 2035. The deal includes binding targets for developed nations and financial support for developing countries.",
+                    "pub_date": "2026-08-31T15:00:00Z",
+                    "categories": [
+                        "Climate",
+                        "Politics",
+                        "Environment"
+                    ],
+                    "is_read": false,
+                    "is_bookmarked": true
+                },
+                {
+                    "guid": "d0e1f2a3-b4c5-6789-abcd-ef0123456789",
+                    "title": "New Quantum Computing Breakthrough Could Revolutionize Drug Discovery",
+                    "link": "https://www.theguardian.com/science/2026/12346",
+                    "description": "Researchers have achieved a quantum computing breakthrough that could dramatically accelerate drug discovery. The new algorithm simulates molecular interactions with unprecedented accuracy.",
+                    "pub_date": "2026-08-30T10:00:00Z",
+                    "categories": [
+                        "Science",
+                        "Quantum Computing",
+                        "Medicine"
+                    ],
+                    "is_read": false,
+                    "is_bookmarked": false
+                }
+            ]
+        },
+        {
+            "link": "https://example.com/science-feed.xml",
+            "category": "Science",
+            "language": "en",
+            "items": [
+                {
+                    "guid": "e1f2a3b4-c5d6-7890-abcd-ef0123456789",
+                    "title": "NASA's Artemis Mission Successfully Lands First Humans on Mars",
+                    "link": "https://example.com/science/artemis",
+                    "description": "NASA's Artemis mission has achieved a historic milestone by landing the first humans on Mars. The mission represents a decade of research, engineering, and international collaboration.",
+                    "pub_date": "2026-08-31T04:00:00Z",
+                    "categories": [
+                        "Space",
+                        "NASA",
+                        "Exploration"
+                    ],
+                    "is_read": false,
+                    "is_bookmarked": false
+                }
+            ]
+        }
+    ]
+}

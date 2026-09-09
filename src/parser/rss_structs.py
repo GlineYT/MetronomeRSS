@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Optional, NotRequired
+from typing import TypedDict
 
 # ============================================================
 # RSS STRUCTS (Python TypedDict version)
@@ -41,11 +41,11 @@ class RSSItem(TypedDict):
     guid: str
     author: str
     comments: str
-    categories: List[RSSCategory]
+    categories: list[RSSCategory]
 
     # Extensions
     content_encoded: str
-    enclosure: Optional[RSSEnclosure]
+    enclosure: RSSEnclosure | None
 
     # Metadata
     source: str
@@ -71,13 +71,13 @@ class RSSChannel(TypedDict):
     web_master: str
 
     # Category
-    categories: List[RSSCategory]
+    categories: list[RSSCategory]
 
     # Image
-    image: Optional[RSSImage]
+    image: RSSImage | None
 
     # Items
-    items: List[RSSItem]
+    items: list[RSSItem]
 
     # Metadata
     version: str

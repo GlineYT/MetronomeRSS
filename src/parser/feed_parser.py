@@ -1,18 +1,16 @@
 #File that parses a feed
 
-import xml.etree.ElementTree as ET
 import logging
 import uuid as uuid_module
-from typing import List, Optional, Dict, Any, Union
-from rss_structs import (
-    RSSChannel, RSSItem, RSSImage, RSSCategory, RSSEnclosure
-)
-from atom_structs import (
-    AtomFeed, AtomEntry, AtomPerson, AtomLink, AtomCategory
-)
+import xml.etree.ElementTree as ET
+from typing import Any
 
+from atom_structs import AtomCategory, AtomEntry, AtomFeed, AtomLink, AtomPerson
+from rss_structs import RSSCategory, RSSChannel, RSSEnclosure, RSSImage, RSSItem
 
-def parsefeed(tree: ET.ElementTree, feed_type: str, path: str) -> Dict[str, Any]:
+logger = logging.getLogger(__name__)
+
+def parsefeed(tree: ET.ElementTree, feed_type: str, path: str) -> dict[str, Any]:
     """
     Main parser entry point. Routes to RSS or Atom parser based on feed_type.
 
@@ -24,11 +22,11 @@ def parsefeed(tree: ET.ElementTree, feed_type: str, path: str) -> Dict[str, Any]
     Returns:
         FeedData dict containing parsed feed data
     """
-    logging.info(f"Parser called with feed type: {feed_type} from {path}")
+    logger.info(f"Parser called with feed type: {feed_type} from {path}")
 
     # Check if it's RSS
     if feed_type in ("RSS_0_90", "RSS_0_91", "RSS_0_92", "RSS_1_0", "RSS_2_0"):
-        logging.info("Feed is RSS type. Parsing channel.")
+        logger.info("Feed is RSS type. Parsing channel.")
         channel = parse_rss_channel(tree, path)
         return {
             "rss": channel,
@@ -37,7 +35,7 @@ def parsefeed(tree: ET.ElementTree, feed_type: str, path: str) -> Dict[str, Any]
 
     # Check if it's Atom
     elif feed_type in ("Atom_0_3", "Atom_1_0"):
-        logging.info("Feed is Atom type. Parsing entries.")
+        logger.info("Feed is Atom type. Parsing entries.")
         feed = parse_atom_feed(tree, path)
         return {
             "atom": feed,
@@ -46,7 +44,7 @@ def parsefeed(tree: ET.ElementTree, feed_type: str, path: str) -> Dict[str, Any]
 
     # Unknown type
     else:
-        logging.error(f"Unknown feed type for parsing: {feed_type}")
+        logger.error(f"Unknown feed type for parsing: {feed_type}")
         return {
             "feed_type": "Unknown",
         }
@@ -90,7 +88,7 @@ def parse_rss_channel(tree: ET.ElementTree, path: str) -> RSSChannel:
     # Find channel element
     channel_elem = root.find("channel")
     if channel_elem is None:
-        logging.error(f"No channel found in RSS feed: {path}")
+        logger.error(f"No channel found in RSS feed: {path}")
         return channel
 
     # Required fields
@@ -119,11 +117,11 @@ def parse_rss_channel(tree: ET.ElementTree, path: str) -> RSSChannel:
     # Parse items
     channel["items"] = parse_rss_items(channel_elem)
 
-    logging.info(f"Finished parsing channel: {channel['title']}")
+    logger.info(f"Finished parsing channel: {channel['title']}")
     return channel
 
 
-def parse_image(parent: ET.Element) -> Optional[RSSImage]:
+def parse_image(parent: ET.Element) -> RSSImage | None:
     """
     Parse RSS image element.
 
@@ -162,7 +160,7 @@ def parse_image(parent: ET.Element) -> Optional[RSSImage]:
     return img
 
 
-def parse_rss_categories(parent: ET.Element) -> List[RSSCategory]:
+def parse_rss_categories(parent: ET.Element) -> list[RSSCategory]:
     """
     Parse RSS category elements.
 
@@ -172,7 +170,7 @@ def parse_rss_categories(parent: ET.Element) -> List[RSSCategory]:
     Returns:
         List of RSSCategory dicts
     """
-    categories: List[RSSCategory] = []
+    categories: list[RSSCategory] = []
 
     for cat_elem in parent.findall("category"):
         categories.append({
@@ -183,7 +181,7 @@ def parse_rss_categories(parent: ET.Element) -> List[RSSCategory]:
     return categories
 
 
-def parse_rss_items(parent: ET.Element) -> List[RSSItem]:
+def parse_rss_items(parent: ET.Element) -> list[RSSItem]:
     """
     Parse all RSS items.
 
@@ -193,7 +191,7 @@ def parse_rss_items(parent: ET.Element) -> List[RSSItem]:
     Returns:
         List of RSSItem dicts
     """
-    items: List[RSSItem] = []
+    items: list[RSSItem] = []
 
     for item_elem in parent.findall("item"):
         item = parse_single_rss_item(item_elem)
@@ -239,7 +237,7 @@ def parse_single_rss_item(item_elem: ET.Element) -> RSSItem:
     return item
 
 
-def parse_rss_enclosure(parent: ET.Element) -> Optional[RSSEnclosure]:
+def parse_rss_enclosure(parent: ET.Element) -> RSSEnclosure | None:
     """
     Parse RSS enclosure (for podcasts/media).
 
@@ -287,7 +285,7 @@ def parse_atom_feed(tree: ET.ElementTree, path: str) -> AtomFeed:
     Returns:
         AtomFeed dict containing feed data
     """
-    logging.info(f"Parsing Atom feed from {path}")
+    logger.info(f"Parsing Atom feed from {path}")
 
     root = tree.getroot()
     feed: AtomFeed = {
@@ -335,11 +333,11 @@ def parse_atom_feed(tree: ET.ElementTree, path: str) -> AtomFeed:
     # Parse entries
     feed["entries"] = parse_atom_entries(root)
 
-    logging.info(f"Finished parsing Atom feed: {feed['title']}")
+    logger.info(f"Finished parsing Atom feed: {feed['title']}")
     return feed
 
 
-def parse_atom_persons(parent: ET.Element, tag: str) -> List[AtomPerson]:
+def parse_atom_persons(parent: ET.Element, tag: str) -> list[AtomPerson]:
     """
     Parse Atom person elements (author, contributor).
 
@@ -350,7 +348,7 @@ def parse_atom_persons(parent: ET.Element, tag: str) -> List[AtomPerson]:
     Returns:
         List of AtomPerson dicts
     """
-    persons: List[AtomPerson] = []
+    persons: list[AtomPerson] = []
 
     for person_elem in parent.findall(f"{ATOM_NS}{tag}"):
         persons.append({
@@ -362,7 +360,7 @@ def parse_atom_persons(parent: ET.Element, tag: str) -> List[AtomPerson]:
     return persons
 
 
-def parse_atom_categories(parent: ET.Element) -> List[AtomCategory]:
+def parse_atom_categories(parent: ET.Element) -> list[AtomCategory]:
     """
     Parse Atom category elements.
 
@@ -372,7 +370,7 @@ def parse_atom_categories(parent: ET.Element) -> List[AtomCategory]:
     Returns:
         List of AtomCategory dicts
     """
-    categories: List[AtomCategory] = []
+    categories: list[AtomCategory] = []
 
     for cat_elem in parent.findall(f"{ATOM_NS}category"):
         categories.append({
@@ -418,7 +416,7 @@ def parse_atom_link(parent: ET.Element) -> AtomLink:
     }
 
 
-def parse_atom_entries(parent: ET.Element) -> List[AtomEntry]:
+def parse_atom_entries(parent: ET.Element) -> list[AtomEntry]:
     """
     Parse Atom entries.
 
@@ -428,7 +426,7 @@ def parse_atom_entries(parent: ET.Element) -> List[AtomEntry]:
     Returns:
         List of AtomEntry dicts
     """
-    entries: List[AtomEntry] = []
+    entries: list[AtomEntry] = []
 
     for entry_elem in parent.findall(f"{ATOM_NS}entry"):
         entry = parse_single_atom_entry(entry_elem)
