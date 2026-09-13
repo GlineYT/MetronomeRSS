@@ -8,6 +8,7 @@ from pathlib import Path
 import src.ui.components.tile as tile
 import src.user.config_pipeline
 import src.util.load_profiles
+import src.util.make_profile
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +40,6 @@ profile_data = src.util.load_profiles.load_profiles_from_directory(PROFILE_DIREC
 
 # Build the profiles dict for the tile layout (name → color_hex)
 profiles = {name: info["color_hex"] for name, info in profile_data.items()}
-
-# If no profiles were loaded, add a default one to test
-if not profiles:
-    logger.warning("No profiles loaded, adding a default one.")
-    profiles["Default"] = "#1e90ff"
 
 logger.info(f"Loaded {len(profiles)} profiles: {list(profiles.keys())}")
 
@@ -163,7 +159,18 @@ while running:
     # Handle clicks
     if selected_profile:
         if selected_profile == "Add Profile":
-            print("Add Profile clicked")
+            logger.info("Adding new profile")
+            name = src.util.make_profile.generate_default_profile_name() #generate a default name
+            src.util.make_profile.create_empty_profile(PROFILE_DIRECTORY,name) #make a new profile
+            # --- Load profiles ---
+            profile_data = src.util.load_profiles.load_profiles_from_directory(PROFILE_DIRECTORY)
+
+            # Build the profiles dict for the tile layout (name → color_hex)
+            profiles = {name: info["color_hex"] for name, info in profile_data.items()}
+
+            #Refresh UI
+            setup_profiles(profiles, screen.get_width(), screen.get_height())
+
         else:
             # Look up the selected profile's data
             if selected_profile in profile_data:
