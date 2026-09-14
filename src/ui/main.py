@@ -6,9 +6,12 @@ import json
 from pathlib import Path
 
 import src.ui.components.tile as tile
+import src.ui.components.text_input as text_input
+
 import src.user.config_pipeline
 import src.util.load_profiles
 import src.util.make_profile
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +33,9 @@ pygame.init()
 screen = pygame.display.set_mode((1920, 1080))
 clock = pygame.time.Clock()
 running = True
+
+text_buffer = [""]
+adding_profile = False  #  state flag
 
 font = pygame.font.SysFont(None, 24)
 button_font = pygame.font.SysFont(None, 32)
@@ -97,10 +103,11 @@ while running:
     mouse_x, mouse_y = pygame.mouse.get_pos()
     clicked = False
     selected_profile = None
+    events = pygame.event.get()
 
     current_time = pygame.time.get_ticks()
 
-    for event in pygame.event.get():
+    for event in events:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -127,7 +134,7 @@ while running:
 
         if x < mouse_pos[0] < x + w and y < mouse_pos[1] < y + h:
             if clicked:
-                selected_profile = label
+                selected_profile =  label
 
         icon_path = USER_ICON
         if is_add:
@@ -160,17 +167,9 @@ while running:
     if selected_profile:
         if selected_profile == "Add Profile":
             logger.info("Adding new profile")
-            name = src.util.make_profile.generate_default_profile_name() #generate a default name
-            src.util.make_profile.create_empty_profile(PROFILE_DIRECTORY,name) #make a new profile
-            # --- Load profiles ---
-            profile_data = src.util.load_profiles.load_profiles_from_directory(PROFILE_DIRECTORY)
-
-            # Build the profiles dict for the tile layout (name → color_hex)
-            profiles = {name: info["color_hex"] for name, info in profile_data.items()}
-
-            #Refresh UI
-            setup_profiles(profiles, screen.get_width(), screen.get_height())
-
+            adding_profile = True
+            selected_profile = None  # Clear it so it doesn't re-trigger
+            text_buffer[0] = "" # Reset the buffer when opening
         else:
             # Look up the selected profile's data
             if selected_profile in profile_data:
@@ -182,6 +181,36 @@ while running:
                 # switch_to_rss_reader(profile_info['data'])
             else:
                 print(f"Profile {selected_profile} clicked (data not found)")
+
+    if adding_profile:
+        # Dim the background for focus
+        dim = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+        dim.fill((0, 0, 0, 150))
+        screen.blit(dim, (0, 0))
+
+        # Draw the input prompt
+        prompt_surf = button_font.render("Enter a name for your new profile:", True, (255, 255, 255))
+        screen.blit(prompt_surf, (800, 700))
+
+        # Draw the input field
+        result = text_input.draw_text_input(
+            screen, 800, 760, 320, font, mouse_pos, clicked, events,
+            text_buffer, placeholder="Profile name..."
+        )
+
+        # If the user pressed Enter, handle the result
+        if result is not None and result.strip() != "":
+            logger.info(f"Creating profile: {result}")
+            src.util.make_profile.create_empty_profile(PROFILE_DIRECTORY, result)
+
+            # Reload profiles
+            profile_data = src.util.load_profiles.load_profiles_from_directory(PROFILE_DIRECTORY)
+            profiles = {name: info["color_hex"] for name, info in profile_data.items()}
+            setup_profiles(profiles, screen.get_width(), screen.get_height())
+
+            # Exit add mode
+            adding_profile = False
+            text_buffer = ""
 
     pygame.display.flip()
     clock.tick(60)
