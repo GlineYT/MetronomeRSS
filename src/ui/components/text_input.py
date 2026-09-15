@@ -43,8 +43,14 @@ def draw_text_input(screen, x, y, width, font, mouse_pos, clicked, events, text_
                     result = text_buffer[0]
                     text_buffer[0] = ""
                     input_focus_state[input_id] = False
+                elif event.key == pygame.K_ESCAPE:
+                    # Cancel the input - clear and unfocus
+                    text_buffer[0] = ""
+                    input_focus_state[input_id] = False
                 else:
-                    text_buffer[0] += event.unicode
+                    # Only append printable characters (filters out control chars)
+                    if event.unicode and event.unicode.isprintable():
+                        text_buffer[0] += event.unicode
 
     # --- DRAWING ---
     pygame.draw.rect(screen, (255, 255, 255), input_rect)
