@@ -1,11 +1,12 @@
+# ruff: noqa: SIM102
 # src/ui/main.py
-import pygame
 import logging
 from pathlib import Path
 
-import src.ui.screens.profile_select as profile_select
-import src.ui.screens.feed_screen as feed_screen
+import pygame
+
 import src.util.load_profiles
+from src.ui.screens import feed_screen, profile_select
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO,)
@@ -76,8 +77,7 @@ while running:
     for event in events:
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if current_time - state["last_click_time"] > state["click_cooldown"]:
                     clicked = True
                     state["last_click_time"] = current_time

@@ -1,5 +1,6 @@
-import pygame
 import os
+
+import pygame
 
 
 def draw_tile(screen, x, y, size, color, label, mouse_pos, font, is_clicked, icon_path=None):

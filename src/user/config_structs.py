@@ -1,7 +1,8 @@
 """
 Configuration TypedDict Definitions
 """
-from typing import TypedDict, List, Optional
+from typing import TypedDict
+
 
 class Color(TypedDict):
     """RGB color object."""
@@ -14,7 +15,7 @@ class Category(TypedDict):
     """User-defined category."""
     name: str
     icon: str
-    bind_patterns: List[str]
+    bind_patterns: list[str]
     is_default: bool
 
 
@@ -25,7 +26,7 @@ class Item(TypedDict):
     link: str
     description: str
     pub_date: str
-    categories: List[str]
+    categories: list[str]
     is_read: bool
     is_bookmarked: bool
 
@@ -35,7 +36,7 @@ class Feed(TypedDict):
     link: str
     category: str
     language: str
-    items: List[Item]
+    items: list[Item]
 
 
 class Metadata(TypedDict):
@@ -51,18 +52,18 @@ class Preferences(TypedDict):
     """User preferences."""
     color_theme: Color
     language: str
-    favourites: List[str]
-    read_items: List[str]
-    bookmarked_items: List[str]
+    favourites: list[str]
+    read_items: list[str]
+    bookmarked_items: list[str]
     user_dir: str
     caching_enabled: bool
     update_interval: int
-    categories: List[Category]
-    blacklist: List[str]
+    categories: list[Category]
+    blacklist: list[str]
 
 
 class Profile(TypedDict):
     """Complete user profile."""
     metadata: Metadata
     preferences: Preferences
-    feeds: List[Feed]
+    feeds: list[Feed]

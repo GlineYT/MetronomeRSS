@@ -1,11 +1,11 @@
 # src/ui/screens/profile_select.py
-import pygame
 import logging
 
-import src.ui.components.tile as tile
-import src.ui.components.text_input as text_input
+import pygame
+
 import src.util.load_profiles
 import src.util.make_profile
+from src.ui.components import text_input, tile
 
 logger = logging.getLogger(__name__)
 
@@ -89,8 +89,7 @@ def draw(state, mouse_pos, clicked, events):
     for tile_data in state["profile_layout"]:
         x, y, w, h, color_hex, label, is_add = tile_data
 
-        if x < mouse_pos[0] < x + w and y < mouse_pos[1] < y + h:
-            if clicked:
+        if x < mouse_pos[0] < x + w and y < mouse_pos[1] < y + h and clicked:
                 selected_profile = label
 
         icon_path = add_icon if is_add else user_icon

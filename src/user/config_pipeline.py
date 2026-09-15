@@ -3,16 +3,13 @@ Configuration Processing Pipeline
 Loads, validates, and parses the user profile configuration.
 """
 import logging
-from typing import Tuple, Optional
 
-import src.user.config_loader as config_loader
-import src.user.config_validator as config_validator
-import src.user.config_parser as config_parser
+from src.user import config_loader, config_parser, config_validator
 from src.user.config_structs import Profile
 
 logger = logging.getLogger(__name__)
 
-def load_profile(config_path: Optional[str] = None) -> Tuple[Optional[Profile], Optional[str]]:
+def load_profile(config_path: str | None = None) -> tuple[Profile | None, str | None]:
     """
     Complete configuration pipeline.
 

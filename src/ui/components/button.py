@@ -1,30 +1,21 @@
 import pygame
 
-def draw_button(screen, x, y, label, font, mouse_pos, clicked, accent_color=(100, 149, 237), height=40,defType="default"):
+
+def draw_button(screen, x, y, label, font, mouse_pos, clicked,
+                accent_color=(100, 149, 237), height=40, defType="default"):
     """Draws a Metro UI button. Returns True if clicked."""
 
-    # Calculate width: text width + padding on both sides (10px each)
     text_surface = font.render(label, True, (255, 255, 255))
     text_w, text_h = text_surface.get_size()
-
-    width = text_w + 20  # 10px padding left, 10px padding right
+    width = text_w + 20
     button_rect = pygame.Rect(x, y, width, height)
-
-    # Hover check
     is_hovered = button_rect.collidepoint(mouse_pos)
 
-    # Check button type
-    if defType == "default":
-        accent_color = accent_color
-
-    elif defType == "warning":
+    # Override accent color based on button type
+    if defType == "warning":
         accent_color = (255, 166, 0)
-
     elif defType == "danger":
         accent_color = (255, 20, 0)
-
-    else:
-        accent_color = accent_color
 
     # Draw the background
     pygame.draw.rect(screen, accent_color, button_rect)

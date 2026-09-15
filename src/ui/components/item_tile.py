@@ -1,5 +1,6 @@
-import pygame
 import components.ptext
+import pygame
+
 
 def draw_item_tile(screen, x, y, title, description, mouse_pos, clicked, accent_color=(100, 149, 237), size=300):
     tile_rect = pygame.Rect(x, y, size, size)

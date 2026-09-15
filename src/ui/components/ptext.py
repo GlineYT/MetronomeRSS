@@ -1,3 +1,8 @@
+# ruff: noqa
+#Telling ruff to shut up.
+#I literally don't know what any of this does
+#It's also not my code. Leave this alone.
+
 # ptext module: place this in your import directory.
 
 # ptext.draw(text, pos=None, **options)
@@ -5,10 +10,10 @@
 # Please see README.md for explanation of options.
 # https://github.com/cosmologicon/pygame-text
 
-from __future__ import division, print_function
 
-from math import ceil, sin, cos, radians, exp
 from collections import namedtuple
+from math import ceil, cos, exp, radians, sin
+
 import pygame
 
 # Global default values
@@ -50,7 +55,7 @@ pygame.font.init()
 # Options object base class. Subclass for Options objects specific to different functions.
 # Specify valid fields in the _fields list. All keyword fields are optional. Unspecified fields
 # default to None, unless otherwise specified in the _defaults list.
-class _Options(object):
+class _Options:
 	_fields = ()
 	_defaults = {}
 	def __init__(self, **kwargs):
@@ -366,8 +371,8 @@ def getfont(**kwargs):
 	else:
 		try:
 			font = pygame.font.Font(options.getfontpath(), options.fontsize)
-		except IOError:
-			raise IOError("unable to read font filename: %s" % options.getfontpath())
+		except OSError:
+			raise OSError("unable to read font filename: %s" % options.getfontpath())
 	if options.bold is not None:
 		font.set_bold(options.bold)
 	if options.italic is not None:

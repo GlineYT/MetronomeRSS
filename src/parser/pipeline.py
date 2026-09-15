@@ -6,9 +6,8 @@ import feed_parser
 import feed_post_processor
 import feed_validator
 
-logger = logging.getLogger("__name__")
-logging.basicConfig(level=logging.INFO,
-format='[%(levelname)s ] %(funcName)s in %(filename)s at %(lineno)d : %(message)s',)
+logger = logging.getLogger(__name__)
+
 
 path = "/home/kingmarkoxiv/Desktop/UKTC/other_files/randomcode/python/MetronomeRSS/test/sample-rss-091.xml"
 

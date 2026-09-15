@@ -1,5 +1,8 @@
+import json
+import logging
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
 
 def load_profiles_from_directory(directory: Path):
     """
@@ -48,7 +51,5 @@ def load_profiles_from_directory(directory: Path):
 
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON in {json_path}: {e}")
-        except Exception as e:
-            logger.error(f"Error loading {json_path}: {e}")
 
     return profiles

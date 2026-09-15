@@ -6,7 +6,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Optional, Dict, Any, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,8 @@ ERR_CONFIG_INVALID_JSON = "ERR_CONFIG_INVALID_JSON"
 ERR_CONFIG_EMPTY = "ERR_CONFIG_EMPTY"
 ERR_CONFIG_PERMISSION = "ERR_CONFIG_PERMISSION"
 
-def load_config(config_path: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+
+def load_config(config_path: str) -> tuple[dict[str, Any] | None, str | None]:
     """
     Stage 1: Load the profile.json file.
 
@@ -52,9 +53,12 @@ def load_config(config_path: str) -> Tuple[Optional[Dict[str, Any]], Optional[st
     except json.JSONDecodeError as e:
         logger.error(f"Invalid JSON in config file: {e}")
         return None, ERR_CONFIG_INVALID_JSON
-    except Exception as e:
-        logger.error(f"Unexpected error reading config: {e}")
+    except UnicodeDecodeError as e:
+        logger.error(f"File is not valid UTF-8: {e}")
         return None, ERR_CONFIG_INVALID_JSON
+    except OSError as e:
+        logger.error(f"Failed to read config file: {e}")
+        return None, ERR_CONFIG_PERMISSION
 
     # Check if data is a dictionary
     if not isinstance(data, dict):
@@ -90,6 +94,6 @@ def ensure_config_directory(config_path: str) -> bool:
     try:
         Path(config_path).parent.mkdir(parents=True, exist_ok=True)
         return True
-    except Exception as e:
+    except OSError as e:
         logger.error(f"Failed to create config directory: {e}")
         return False

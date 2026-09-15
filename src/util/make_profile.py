@@ -1,10 +1,9 @@
 import json
-import uuid
-import random
 import logging
-
+import random
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ def create_empty_profile(directory: str, name: str) -> str:
 
     profile_path = dir_path / f"{name}.json"
 
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     current_date = now.strftime("%Y-%m-%d")
     current_time = now.strftime("%H:%M:%S")
 

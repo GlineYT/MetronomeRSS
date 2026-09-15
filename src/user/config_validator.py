@@ -3,7 +3,7 @@ Stage 2: Configuration Validator
 Validates the structure and fields of the configuration.
 """
 import logging
-from typing import Tuple, Optional, Dict, Any
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ ERR_INVALID_ITEM = "ERR_INVALID_ITEM"
 # Valid language codes (ISO 639-1)
 VALID_LANGUAGES = {"en", "fr", "de", "es", "it", "pt", "ru", "zh", "ja", "ar"}
 
-def validate_config(data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+def validate_config(data: dict[str, Any]) -> tuple[bool, str | None]:
     """
     Stage 2: Validate the configuration structure and fields.
 
@@ -66,7 +66,7 @@ def validate_config(data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def validate_metadata(metadata: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+def validate_metadata(metadata: dict[str, Any]) -> tuple[bool, str | None]:
     """Validate the metadata section."""
     logger.info("Validating metadata")
 
@@ -89,7 +89,7 @@ def validate_metadata(metadata: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def validate_preferences(preferences: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+def validate_preferences(preferences: dict[str, Any]) -> tuple[bool, str | None]:
     """Validate the preferences section."""
     logger.info("Validating preferences")
 
@@ -109,14 +109,12 @@ def validate_preferences(preferences: Dict[str, Any]) -> Tuple[bool, Optional[st
             logger.warning(f"Unknown language code: {lang} (using any string)")
 
     # Validate user_dir (must be a string)
-    if "user_dir" in preferences:
-        if not isinstance(preferences["user_dir"], str):
+    if "user_dir" in preferences and not isinstance(preferences["user_dir"], str):
             logger.error("user_dir must be a string")
             return False, ERR_INVALID_STRING
 
     # Validate caching_enabled (must be boolean)
-    if "caching_enabled" in preferences:
-        if not isinstance(preferences["caching_enabled"], bool):
+    if "caching_enabled" in preferences and not isinstance(preferences["caching_enabled"], bool):
             logger.error("caching_enabled must be a boolean")
             return False, ERR_INVALID_BOOLEAN
 
@@ -182,7 +180,7 @@ def validate_preferences(preferences: Dict[str, Any]) -> Tuple[bool, Optional[st
     return True, None
 
 
-def validate_color(color: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+def validate_color(color: dict[str, Any]) -> tuple[bool, str | None]:
     """Validate a color object."""
     if not isinstance(color, dict):
         logger.error("Color must be an object")
@@ -203,7 +201,7 @@ def validate_color(color: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def validate_categories(categories: list) -> Tuple[bool, Optional[str]]:
+def validate_categories(categories: list) -> tuple[bool, str | None]:
     """Validate categories list."""
     if not isinstance(categories, list):
         logger.error("Categories must be a list")
@@ -242,7 +240,7 @@ def validate_categories(categories: list) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def validate_feeds(feeds: list) -> Tuple[bool, Optional[str]]:
+def validate_feeds(feeds: list) -> tuple[bool, str | None]:
     """Validate feeds list."""
     if not isinstance(feeds, list):
         logger.error("Feeds must be a list")
@@ -277,7 +275,7 @@ def validate_feeds(feeds: list) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def validate_items(items: list) -> Tuple[bool, Optional[str]]:
+def validate_items(items: list) -> tuple[bool, str | None]:
     """Validate items list."""
     if not isinstance(items, list):
         logger.error("Items must be a list")

@@ -1,6 +1,7 @@
 # components/checkbox.py
 import pygame
 
+
 def draw_checkbox(screen, x, y, label, state_dict, key, font, mouse_pos, clicked, accent_color=(100, 149, 237), size=25):
     """Draws a checkbox. Returns True if state was toggled."""
 

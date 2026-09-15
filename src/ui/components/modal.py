@@ -1,5 +1,6 @@
-import pygame
 import components.ptext
+import pygame
+
 
 def draw_modal(screen, title, description, mouse_pos, clicked, accent_color=(100, 149, 237)):
     """

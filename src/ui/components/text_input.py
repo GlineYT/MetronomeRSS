@@ -1,5 +1,6 @@
 import pygame
 
+
 def draw_text_input(screen, x, y, width, font, mouse_pos, clicked, events, text_buffer, accent_color=(100, 149, 237), height=50, placeholder=""):
     """
     Draws a Metro UI text input.
@@ -87,8 +88,7 @@ def draw_text_input(screen, x, y, width, font, mouse_pos, clicked, events, text_
         screen.blit(text_surface, (text_x, text_y))
 
         # --- BLINKING CURSOR ---
-        if active:
-            if (pygame.time.get_ticks() // 500) % 2 == 0:
+        if active and (pygame.time.get_ticks() // 500) % 2 == 0:
                 cursor_x = text_x + text_width + 1
                 cursor_y = y + 10
                 cursor_height = height - 20

@@ -3,21 +3,21 @@ Stage 3: Configuration Parser
 Parses the configuration into typed dictionaries.
 """
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 from src.user.config_structs import (
-    Profile,
-    Metadata,
-    Preferences,
-    Color,
     Category,
+    Color,
     Feed,
     Item,
+    Metadata,
+    Preferences,
+    Profile,
 )
 
 logger = logging.getLogger(__name__)
 
-def parse_config(data: Dict[str, Any]) -> Optional[Profile]:
+def parse_config(data: dict[str, Any]) -> Profile | None:
     """
     Stage 3: Parse the configuration into a typed dictionary.
 
@@ -29,31 +29,29 @@ def parse_config(data: Dict[str, Any]) -> Optional[Profile]:
     """
     logger.info("Parsing configuration")
 
-    try:
-        # Parse metadata
-        metadata = parse_metadata(data.get("metadata", {}))
 
-        # Parse preferences
-        preferences = parse_preferences(data.get("preferences", {}))
+    # Parse metadata
+    metadata = parse_metadata(data.get("metadata", {}))
 
-        # Parse feeds
-        feeds = parse_feeds(data.get("feeds", []))
+    # Parse preferences
+    preferences = parse_preferences(data.get("preferences", {}))
 
-        profile: Profile = {
-            "metadata": metadata,
-            "preferences": preferences,
-            "feeds": feeds,
-        }
+    # Parse feeds
+    feeds = parse_feeds(data.get("feeds", []))
 
-        logger.info("Configuration parsed successfully")
-        return profile
+    profile: Profile = {
+        "metadata": metadata,
+        "preferences": preferences,
+        "feeds": feeds,
+    }
 
-    except Exception as e:
-        logger.error(f"Error parsing configuration: {e}")
-        return None
+    logger.info("Configuration parsed successfully")
+    return profile
 
 
-def parse_metadata(data: Dict[str, Any]) -> Metadata:
+
+
+def parse_metadata(data: dict[str, Any]) -> Metadata:
     """Parse metadata into a typed dict."""
     return {
         "guid": data.get("guid", ""),
@@ -64,7 +62,7 @@ def parse_metadata(data: Dict[str, Any]) -> Metadata:
     }
 
 
-def parse_preferences(data: Dict[str, Any]) -> Preferences:
+def parse_preferences(data: dict[str, Any]) -> Preferences:
     """Parse preferences into a typed dict."""
     # Parse color
     color_data = data.get("color_theme", {})
@@ -91,9 +89,9 @@ def parse_preferences(data: Dict[str, Any]) -> Preferences:
     }
 
 
-def parse_categories(data: List[Dict[str, Any]]) -> List[Category]:
+def parse_categories(data: list[dict[str, Any]]) -> list[Category]:
     """Parse categories list."""
-    categories: List[Category] = []
+    categories: list[Category] = []
     for cat_data in data:
         categories.append({
             "name": cat_data.get("name", ""),
@@ -104,9 +102,9 @@ def parse_categories(data: List[Dict[str, Any]]) -> List[Category]:
     return categories
 
 
-def parse_feeds(data: List[Dict[str, Any]]) -> List[Feed]:
+def parse_feeds(data: list[dict[str, Any]]) -> list[Feed]:
     """Parse feeds list."""
-    feeds: List[Feed] = []
+    feeds: list[Feed] = []
     for feed_data in data:
         # Parse items
         items = parse_items(feed_data.get("items", []))
@@ -120,9 +118,9 @@ def parse_feeds(data: List[Dict[str, Any]]) -> List[Feed]:
     return feeds
 
 
-def parse_items(data: List[Dict[str, Any]]) -> List[Item]:
+def parse_items(data: list[dict[str, Any]]) -> list[Item]:
     """Parse items list."""
-    items: List[Item] = []
+    items: list[Item] = []
     for item_data in data:
         items.append({
             "guid": item_data.get("guid", ""),

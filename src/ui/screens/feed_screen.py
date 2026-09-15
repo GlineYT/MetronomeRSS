@@ -1,6 +1,7 @@
 # src/ui/screens/feed_screen.py
-import pygame
 import logging
+
+import pygame
 
 logger = logging.getLogger(__name__)
 
@@ -37,5 +38,5 @@ def draw(state, mouse_pos, clicked, events):
         state["current_screen"] = "PROFILE_SELECT"
         state["selected_profile"] = None
         # Reload the profile screen state
-        import src.ui.screens.profile_select as profile_select
+        from src.ui.screens import profile_select
         profile_select.init(state)
