@@ -4,6 +4,8 @@ import random
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from src.util.sanitize_filenames import sanitize_profile_name
+
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +20,12 @@ def create_empty_profile(directory: str, name: str) -> str:
     Returns:
         The full path to the created profile file.
     """
+
     logger.info("Creating new profile")
     dir_path = Path(directory).resolve()
+    logger.info("Sanitizing name")
+    name = sanitize_profile_name(name)
+
     dir_path.mkdir(parents=True, exist_ok=True)
 
     profile_path = dir_path / f"{name}.json"
@@ -27,6 +33,8 @@ def create_empty_profile(directory: str, name: str) -> str:
     now = datetime.now(timezone.utc)
     current_date = now.strftime("%Y-%m-%d")
     current_time = now.strftime("%H:%M:%S")
+
+
 
     profile = {
         "metadata": {

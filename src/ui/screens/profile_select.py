@@ -1,11 +1,10 @@
-# src/ui/screens/profile_select.py
 import logging
 
 import pygame
 
 import src.util.load_profiles
 import src.util.make_profile
-from src.ui.components import text_input, tile
+from src.ui.components import text_input, tile, button
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,6 @@ MAX_TILES_PER_PAGE = 8
 TILE_W, TILE_H = 310, 310
 GAP = 10
 COLS = 4
-
 
 def _setup_profiles(state, screen_w, screen_h):
     """Calculates tile positions for the current page and stores them in state."""
@@ -66,6 +64,7 @@ def init(state):
     state["adding_profile"] = False
     state["text_buffer"] = [""]
     state["add_profile_error"] = None
+    state["screen_dimmed"] = False
     _refresh_profiles(state)
 
 
@@ -97,27 +96,22 @@ def draw(state, mouse_pos, clicked, events):
 
     # --- PAGINATION ---
     if state["current_page"] > 0:
-        prev_rect = pygame.Rect(100, 900, 150, 50)
-        pygame.draw.rect(screen, button_color, prev_rect)
-        prev_text = button_font.render("< Prev", True, (255, 255, 255))
-        screen.blit(prev_text, prev_rect.center)
-        if prev_rect.collidepoint(mouse_pos) and clicked:
+        prev_button = button.draw_button(screen,100,100,"<Previous",font,mouse_pos,clicked)
+        if prev_button and state["screen_dimmed"] == False:
             state["current_page"] -= 1
             _setup_profiles(state, screen.get_width(), screen.get_height())
 
     total_tiles = len(state["profiles"]) + 1
     total_pages = (total_tiles + MAX_TILES_PER_PAGE - 1) // MAX_TILES_PER_PAGE
-    if state["current_page"] < total_pages - 1:
-        next_rect = pygame.Rect(screen.get_width() - 250, 900, 150, 50)
-        pygame.draw.rect(screen, button_color, next_rect)
-        next_text = button_font.render("Next >", True, (255, 255, 255))
-        screen.blit(next_text, next_rect.center)
-        if next_rect.collidepoint(mouse_pos) and clicked:
+    if state["current_page"] < total_pages - 1 :
+        next_button = button.draw_button(screen,300,100,"Next>",font,mouse_pos,clicked)
+
+        if next_button and state["screen_dimmed"] == False:
             state["current_page"] += 1
             _setup_profiles(state, screen.get_width(), screen.get_height())
 
     # --- CLICK HANDLING ---
-    if selected_profile:
+    if selected_profile and state["screen_dimmed"] == False:
         if selected_profile == "Add Profile":
             logger.info("Adding new profile")
             state["adding_profile"] = True
@@ -132,6 +126,7 @@ def draw(state, mouse_pos, clicked, events):
 
     # --- ADD PROFILE OVERLAY ---
     if state["adding_profile"]:
+        state["screen_dimmed"] = True
         dim = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
         dim.fill((0, 0, 0, 150))
         screen.blit(dim, (0, 0))
@@ -160,6 +155,7 @@ def draw(state, mouse_pos, clicked, events):
                 state["text_buffer"][0] = ""  # Clear input so they can retype
             else:
                 # Name is unique - create the profile
+                state["screen_dimmed"] = False
                 logger.info(f"Creating profile: {cleaned_name}")
                 src.util.make_profile.create_empty_profile(state["profile_directory"], cleaned_name)
                 _refresh_profiles(state)

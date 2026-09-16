@@ -1,5 +1,4 @@
 # ruff: noqa: SIM102
-# src/ui/main.py
 import logging
 from pathlib import Path
 
