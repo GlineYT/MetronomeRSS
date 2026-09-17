@@ -7,10 +7,10 @@ def draw_tile(screen, x, y, size, color, label, mouse_pos, font, is_clicked, ico
     draw_text = True
 
     if size == "Large":
-        w, h = 310, 310
+        w, h = 300, 300
         icon_size = 256
     elif size == "Wide":
-        w, h = 310, 150
+        w, h = 300, 150
         icon_size = 128
     elif size == "Medium":
         w, h = 150, 150

@@ -4,14 +4,16 @@ import pygame
 
 import src.util.load_profiles
 import src.util.make_profile
+
+from src.ui.screens import feed_screen
 from src.ui.components import text_input, tile, button
 
 logger = logging.getLogger(__name__)
 
 # --- Constants ---
 MAX_TILES_PER_PAGE = 8
-TILE_W, TILE_H = 310, 310
-GAP = 10
+TILE_W, TILE_H = 300, 300
+GAP = 5
 COLS = 4
 
 def _setup_profiles(state, screen_w, screen_h):
@@ -117,12 +119,21 @@ def draw(state, mouse_pos, clicked, events):
             state["adding_profile"] = True
             state["text_buffer"][0] = ""
         else:
-            # Switch to the feed screen for this profile!
             logger.info(f"Switching to FEEDS screen for {selected_profile}")
+
+            profile_info = state["profile_data"].get(selected_profile)
+            if profile_info is None:
+                logger.error(f"Profile '{selected_profile}' not found")
+                return
+
             state["selected_profile"] = selected_profile
+            state["selected_profile_data"] = profile_info["data"]
+
+            color = profile_info["data"]["preferences"]["color_theme"]
+            state["accent_color"] = (color["r"], color["g"], color["b"])
+
             state["current_screen"] = "FEEDS"
-            init_feed_screen = src.ui.screens.feed_screen.init
-            init_feed_screen(state)
+            feed_screen.init(state)
 
     # --- ADD PROFILE OVERLAY ---
     if state["adding_profile"]:

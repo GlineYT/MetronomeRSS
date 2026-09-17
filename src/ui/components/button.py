@@ -2,7 +2,7 @@ import pygame
 
 
 def draw_button(screen, x, y, label, font, mouse_pos, clicked,
-                accent_color=(100, 149, 237), height=40, defType="default"):
+                accent_color=(255, 128, 0), height=40, defType="default"):
     """Draws a Metro UI button. Returns True if clicked."""
 
     text_surface = font.render(label, True, (255, 255, 255))
