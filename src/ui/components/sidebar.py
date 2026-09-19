@@ -1,25 +1,37 @@
 import pygame
+from pathlib import Path
 import src.ui.components.tile as tile
 
 
+# --- Path resolution ---
+# This file lives in src/ui/components/.
+# The assets are in src/ui/assets/, so we go up one level: ../assets
+SCRIPT_DIR = Path(__file__).parent.resolve()
+ASSETS_DIR = SCRIPT_DIR.parent / "assets"
+
+def _asset(name):
+    """Builds an absolute path to an asset file in src/ui/assets/."""
+    return str(ASSETS_DIR / name)
+
+
 # --- Sidebar layout constants ---
-SIDEBAR_WIDTH_RATIO = 0.20   # 20% of screen width
-TILE_SIZE = 75               # Matches the "Small" size in tile.py
+SIDEBAR_WIDTH_RATIO = 0.20
+TILE_SIZE = 75
 TILE_GAP = 6
 ROW_PADDING = 8
 TEXT_PAD_LEFT = 24
 
 # --- Menu items (label, subtitle, icon_path) ---
+# Icon paths are now absolute, resolved at import time.
 MENU_ITEMS = [
-    ("All RSS feeds", "See everything",         "assets/rss.png"),
-    ("Categories",    "See by category",        "assets/categories.png"),
-    ("Favourites",    "See your favourites",    "assets/star.png"),
-    ("Sources",       "See by source",          "assets/source.png"),
-    ("Manage RSS",    "Manage your feeds",      "assets/manage.png"),
-    ("Settings",      "Manage your experience", "assets/settings.png"),
-    ("Quit",          "Exit Metronome RSS",     "assets/quit.png"),
+    ("All RSS feeds", "See everything",         _asset("rss.png")),
+    ("Categories",    "See by category",        _asset("category.png")),
+    ("Favourites",    "See your favourites",    _asset("favorites.png")),
+    ("Sources",       "See by source",          _asset("downarrow.png")),
+    ("Manage RSS",    "Manage your feeds",      _asset("managerss.png")),
+    ("Settings",      "Manage your experience", _asset("settings.png")),
+    ("Quit",          "Exit Metronome RSS",     _asset("xsymbol.png")),
 ]
-
 
 def draw_sidebar(screen, font, small_font, mouse_pos, clicked, is_open, accent_color):
     """
