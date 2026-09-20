@@ -1,4 +1,4 @@
-import components.ptext
+from src.ui.components import ptext
 import pygame
 
 
@@ -27,7 +27,7 @@ def draw_item_tile(screen, x, y, title, description, mouse_pos, clicked, accent_
     # Render the title to get its actual height (we need this to know where the description starts)
     # We'll use a "dummy" surface to measure, or just use ptext.draw and let it find its own height
     # The trick: use the return value of ptext.draw() to see where it ended.
-    title_surf, title_pos = components.ptext.draw(
+    title_surf, title_pos = ptext.draw(
         title,
         surf=screen,
         pos=(x + 10, y + 10),
@@ -48,7 +48,7 @@ def draw_item_tile(screen, x, y, title, description, mouse_pos, clicked, accent_
     # Change the clip to ONLY that sub-box.
     screen.set_clip(desc_box.inflate(-6, -6))
 
-    components.ptext.draw(
+    ptext.draw(
         description,
         surf=screen,
         left=x + 10,

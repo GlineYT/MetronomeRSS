@@ -149,6 +149,7 @@ def validateFields(RSStree, feedType, path):
 
         # All RSS checks passed
         logger.info("All checks passed")
+        error = ""
         return True, error if error != "" else "INF_ALL_OK"
 
     # ATOM FEEDS

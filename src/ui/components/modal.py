@@ -1,4 +1,4 @@
-import components.ptext
+from src.ui.components import ptext
 import pygame
 
 
@@ -8,7 +8,7 @@ def draw_modal(screen, title, description, mouse_pos, clicked, accent_color=(100
     """
     # --- STAGE 1: DIM THE BACKGROUND ---
     dim_surface = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-    dim_surface.fill((0, 0, 0, 180))  # 180 alpha = dark but not fully opaque
+    dim_surface.fill((0, 0, 0, 60))  # 180 alpha = dark but not fully opaque
     screen.blit(dim_surface, (0, 0))
 
     # --- STAGE 2: THE MODAL WINDOW (Fixed size) ---
@@ -31,7 +31,7 @@ def draw_modal(screen, title, description, mouse_pos, clicked, accent_color=(100
     old_clip = screen.get_clip()
     screen.set_clip(modal_rect.inflate(-4, -4))
 
-    components.ptext.draw(
+    ptext.draw(
         title,
         surf=screen,
         pos=(modal_x + 20, modal_y + 20),
@@ -48,7 +48,7 @@ def draw_modal(screen, title, description, mouse_pos, clicked, accent_color=(100
     TITLE_BODY_GAP = 20
     description_y = modal_y + 100 + TITLE_BODY_GAP  # 70 is initial title height, then add gap
 
-    components.ptext.draw(
+    ptext.draw(
         description,
         surf=screen,
         left=modal_x + 20,

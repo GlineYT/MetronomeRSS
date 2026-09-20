@@ -5,8 +5,8 @@ import uuid as uuid_module
 import xml.etree.ElementTree as ET
 from typing import Any
 
-from atom_structs import AtomCategory, AtomEntry, AtomFeed, AtomLink, AtomPerson
-from rss_structs import RSSCategory, RSSChannel, RSSEnclosure, RSSImage, RSSItem
+from src.parser.atom_structs import AtomCategory, AtomEntry, AtomFeed, AtomLink, AtomPerson
+from src.parser.rss_structs import RSSCategory, RSSChannel, RSSEnclosure, RSSImage, RSSItem
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,3 @@
-# components/checkbox.py
 import pygame
 
 
