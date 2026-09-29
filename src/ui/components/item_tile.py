@@ -16,17 +16,12 @@ def draw_item_tile(screen, x, y, title, description, mouse_pos, clicked, accent_
     if is_hovered:
         pygame.draw.rect(screen, (240, 240, 240), tile_rect, 3)
 
-    # Initialize the width and height of the wrapped title to 0
     title_bottom = y + 10  # Default if title is empty
 
-    # --- 1. FIRST CLIP: Draw the title ----
+    # --- 1. FIRST CLIP: Draw the title ---
     old_clip = screen.get_clip()
-    # Clip to the whole tile (minus 6px)
     screen.set_clip(tile_rect.inflate(-6, -6))
 
-    # Render the title to get its actual height (we need this to know where the description starts)
-    # We'll use a "dummy" surface to measure, or just use ptext.draw and let it find its own height
-    # The trick: use the return value of ptext.draw() to see where it ended.
     title_surf, title_pos = ptext.draw(
         title,
         surf=screen,
@@ -38,21 +33,19 @@ def draw_item_tile(screen, x, y, title, description, mouse_pos, clicked, accent_
         width=size - 20,
         lineheight=1.2
     )
-    # The title is drawn. Now we know its bottom edge.
-    title_bottom = title_pos[1] + title_surf.get_height() + 10  # Add 10px gap
+    title_bottom = title_pos[1] + title_surf.get_height() + 10
 
     # --- 2. SECOND CLIP: Draw the description ---
-    # Create a sub-box for the description that stops right below the title.
+    # The description box is the remaining area below the title.
     desc_box = pygame.Rect(x, title_bottom, size, y + size - title_bottom)
-
-    # Change the clip to ONLY that sub-box.
     screen.set_clip(desc_box.inflate(-6, -6))
 
+    # Anchor to TOP (not bottom) so overflow spills off the bottom of the tile.
     ptext.draw(
         description,
         surf=screen,
+        top=title_bottom,       #Anchor to top of description area
         left=x + 10,
-        bottom=y + size - 10,  # Glued to bottom of tile
         sysfontname="Arial",
         fontsize=22,
         color=(200, 200, 200),
