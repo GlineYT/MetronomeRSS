@@ -2,19 +2,22 @@ import logging
 import sys
 import pygame
 
+from pathlib import Path
+
 from src.ui.components import button
 from src.ui.components import sidebar
 from src.ui.components import item_tile
 from src.ui.components import modal
+from src.ui.components import text_input
 
 from src.parser import pipeline
 
 from src.util import strip_html
 
+from src.net import downloader
+
 logger = logging.getLogger(__name__)
 
-# Hardcoded test path for now
-TEST_FEED_PATH = "/home/kingmarkoxiv/Desktop/UKTC/other_files/randomcode/python/MetronomeRSS/test/sample.xml"
 
 # --- Grid layout constants ---
 TILE_SIZE = 300
@@ -49,12 +52,25 @@ def _extract_items(parsed_feed):
 
 def _load_feeds(state):
     """Parse feeds for the current profile and store items in state."""
-    parsed = _parse_feed(TEST_FEED_PATH)
+    path = state.get("current_feed_location", "")
+
+    if not path:
+        logger.info("No feed loaded yet — starting with empty item list")
+        state["feed_items"] = []
+        state["feed_title"] = ""
+        return
+
+    if not Path(path).exists():
+        logger.warning(f"Feed path does not exist: {path}")
+        state["feed_items"] = []
+        state["feed_title"] = ""
+        return
+
+    parsed = _parse_feed(path)
     state["feed_items"] = _extract_items(parsed)
     if parsed and "rss" in parsed:
         state["feed_title"] = parsed["rss"].get("title", "")
-    logger.info(f"Loaded {len(state['feed_items'])} items")
-
+    logger.info(f"Loaded {len(state['feed_items'])} items from {path}")
 
 def _setup_item_layout(state, content_x, content_y):
     """Compute absolute positions of all item tiles."""
@@ -75,6 +91,7 @@ def init(state):
     state["selected_section"] = "All RSS feeds"
 
     # Feed data
+    state["current_feed_location"] = ""
     state["feed_items"] = []
     state["feed_title"] = ""
     state["feed_item_layout"] = []
@@ -85,9 +102,92 @@ def init(state):
     state["modal_description"] = ""
     state["modal_rect"] = None
 
+    #netio state
+    state["downloading_feed"] =  False
+    state["download_text_buffer"] = [""]
+    state["download_error"] = None
+
     # Load feeds immediately
     _load_feeds(state)
 
+    #Screen State
+    state["block_background_input"] = False
+    state["block_hover"] = False
+
+def _draw_download_overlay(state, mouse_pos, clicked, events):
+    """Draws the download URL input overlay."""
+    screen = state["screen"]
+    font = state["font"]
+    button_font = state["button_font"]
+    state["block_background_input"] = True
+    state["block_hover"] = True
+
+    # --- Dim the background ---
+    dim = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+    dim.fill((0, 0, 0, 150))
+    screen.blit(dim, (0, 0))
+
+    # --- Prompt ---
+    prompt_surf = button_font.render(
+        "Enter the URL of the RSS feed to download:", True, (255, 255, 255)
+    )
+    prompt_rect = prompt_surf.get_rect(center=(screen.get_width() // 2, 400))
+    screen.blit(prompt_surf, prompt_rect)
+
+    # --- Text input ---
+    result = text_input.draw_text_input(
+        screen,
+        screen.get_width() // 2 - 320, 450, 640,
+        font, mouse_pos, clicked, events,
+        state["download_text_buffer"],
+        placeholder="https://example.com/feed.xml",
+    )
+
+    # --- Error message ---
+    if state.get("download_error"):
+        error_surf = font.render(state["download_error"], True, (255, 100, 100))
+        error_rect = error_surf.get_rect(center=(screen.get_width() // 2, 520))
+        screen.blit(error_surf, error_rect)
+
+    # --- Handle submission ---
+    if result is not None and result.strip() != "":
+        url = result.strip()
+        _perform_download(state, url)
+        state["block_background_input"] = False
+        state["block_hover"] = False
+
+    # --- Handle cancel (Escape key) ---
+    for event in events:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            state["downloading_feed"] = False
+            state["download_error"] = None
+            state["download_text_buffer"][0] = ""
+            state["block_background_input"] = False
+            state["block_hover"] = False
+            return
+
+def _perform_download(state, url):
+    """Download a feed from a URL and refresh the feed list."""
+    logger.info(f"Downloading feed: {url}")
+
+    # Where to put it: profile_directory/tmp/
+    tmp_dir = Path(state["profile_directory"]) / "tmp"
+
+    paths, error_code = downloader.downloadRSS([url], destination=tmp_dir)
+
+    if error_code == downloader.INF_DL_ALL_OK and paths:
+        logger.info(f"Downloaded {len(paths)} file(s): {paths}")
+        state["download_error"] = None
+        state["downloading_feed"] = False
+        state["download_text_buffer"][0] = ""
+        state["current_feed_location"] = paths[0]
+
+        # Refresh the feed list
+        _load_feeds(state)
+    else:
+        logger.error(f"Download failed: {error_code}")
+        state["download_error"] = f"Download failed: {error_code}"
+        state["download_text_buffer"][0] = ""
 
 def draw(state, mouse_pos, clicked, events):
     screen = state["screen"]
@@ -122,19 +222,28 @@ def draw(state, mouse_pos, clicked, events):
     if toggle_rect.collidepoint(mouse_pos) and clicked:
         state["sidebar_open"] = not state["sidebar_open"]
 
+     # --- DOWNLOAD BUTTON (next to Reload) ---
+    download_button = button.draw_button(
+        screen, screen.get_width() - 230, 5, "Download", button_font,
+        mouse_pos, clicked, accent_color=accent
+    )
+    if download_button and not state["sidebar_open"] and not state["block_background_input"]:
+        state["downloading_feed"] = True
+        state["download_text_buffer"][0] = ""
+
     # --- RELOAD BUTTON ---
     reload_button = button.draw_button(
         screen, screen.get_width() - 100, 5, "Reload", button_font,
         mouse_pos, clicked, accent_color=accent
     )
-    if reload_button and not state["sidebar_open"]:
+    if reload_button and not state["sidebar_open"] and not state["block_background_input"]:
         _load_feeds(state)
 
     # --- BACK BUTTON ---
     back_button = button.draw_button(
         screen, 55, 5, "Back", button_font, mouse_pos, clicked, accent
     )
-    if back_button and not state["sidebar_open"]:
+    if back_button and not state["sidebar_open"] and not state["block_background_input"]:
         logger.info("Returning to PROFILE_SELECT")
         state["current_screen"] = "PROFILE_SELECT"
         state["selected_profile"] = None
@@ -162,7 +271,7 @@ def draw(state, mouse_pos, clicked, events):
 
     # "Effective" input: when the sidebar is open, item tiles shouldn't respond
     # to hover or clicks (they're behind the dim overlay).
-    if state["sidebar_open"]:
+    if state["sidebar_open"] or state["block_hover"]:
         effective_mouse = (-1, -1)
         effective_clicked = False
     else:
@@ -184,25 +293,31 @@ def draw(state, mouse_pos, clicked, events):
         ):
             clicked_item = (item_title, item_desc)
 
+    # If the download overlay is open, it owns input for this frame
+    if state["downloading_feed"]:
+        _draw_download_overlay(state, mouse_pos, clicked, events)
+        return
+
     # Open modal on click
-    if clicked_item:
+    if clicked_item and not state["block_background_input"]:
         state["show_modal"] = True
         state["modal_title"] = clicked_item[0]
         state["modal_description"] = clicked_item[1]
         clicked = False  # eat the click so nothing else sees it
 
     # --- SIDEBAR (drawn last, on top of everything, with its own dim) ---
-    sidebar_result = sidebar.draw_sidebar(
-        screen, button_font, small_font,
-        mouse_pos, clicked, state["sidebar_open"], accent,
-    )
+    if not state["block_background_input"]:
+        sidebar_result = sidebar.draw_sidebar(
+            screen, button_font, small_font,
+            mouse_pos, clicked, state["sidebar_open"], accent,
+        )
 
-    if sidebar_result == "CLOSE":
-        state["sidebar_open"] = False
-        # Sidebar changed width — recompute layout for the wider content area
-        _setup_item_layout(state, 20, CONTENT_TOP + 10)
-    elif sidebar_result == "Quit":
-        sys.exit(0)
-    elif sidebar_result:
-        logger.info(f"Sidebar item clicked: {sidebar_result}")
-        state["selected_section"] = sidebar_result
+        if sidebar_result == "CLOSE":
+            state["sidebar_open"] = False
+            # Sidebar changed width — recompute layout for the wider content area
+            _setup_item_layout(state, 20, CONTENT_TOP + 10)
+        elif sidebar_result == "Quit":
+            sys.exit(0)
+        elif sidebar_result:
+            logger.info(f"Sidebar item clicked: {sidebar_result}")
+            state["selected_section"] = sidebar_result

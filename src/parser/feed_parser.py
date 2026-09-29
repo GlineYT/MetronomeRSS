@@ -1,5 +1,3 @@
-#File that parses a feed
-
 import logging
 import uuid as uuid_module
 import xml.etree.ElementTree as ET
@@ -10,45 +8,171 @@ from src.parser.rss_structs import RSSCategory, RSSChannel, RSSEnclosure, RSSIma
 
 logger = logging.getLogger(__name__)
 
-def parsefeed(tree: ET.ElementTree, feed_type: str, path: str) -> dict[str, Any]:
-    """
-    Main parser entry point. Routes to RSS or Atom parser based on feed_type.
+def parsefeed(RSStree, feedType, path):
+    logger.info(f"Parser called with feed type: {feedType} from {path}")
 
-    Args:
-        tree: Parsed XML ElementTree
-        feed_type: String indicating feed type (e.g., "RSS_2_0", "Atom_1_0")
-        path: File path for logging/reference
-
-    Returns:
-        FeedData dict containing parsed feed data
-    """
-    logger.info(f"Parser called with feed type: {feed_type} from {path}")
-
-    # Check if it's RSS
-    if feed_type in ("RSS_0_90", "RSS_0_91", "RSS_0_92", "RSS_1_0", "RSS_2_0"):
-        logger.info("Feed is RSS type. Parsing channel.")
-        channel = parse_rss_channel(tree, path)
+    # RSS 1.0 (RDF)
+    if feedType == "RSS_1_0":
+        logger.info("Feed is RSS 1.0 (RDF). Parsing channel.")
+        channel = parse_rdf_channel(RSStree, path)
         return {
             "rss": channel,
             "feed_type": "RSS",
         }
 
-    # Check if it's Atom
-    elif feed_type in ("Atom_0_3", "Atom_1_0"):
-        logger.info("Feed is Atom type. Parsing entries.")
-        feed = parse_atom_feed(tree, path)
+    # RSS 0.90 / 0.91 / 0.92 / 2.0
+    elif feedType in ("RSS_0_90", "RSS_0_91", "RSS_0_92", "RSS_2_0"):
+        logger.info(f"Feed is {feedType}. Parsing channel.")
+        channel = parse_rss_channel(RSStree, path)
+        return {
+            "rss": channel,
+            "feed_type": "RSS",
+        }
+
+    # Atom
+    elif feedType in ("Atom_0_3", "Atom_1_0"):
+        logger.info("Feed is Atom. Parsing entries.")
+        feed = parse_atom_feed(RSStree, path)
         return {
             "atom": feed,
             "feed_type": "Atom",
         }
 
-    # Unknown type
     else:
-        logger.error(f"Unknown feed type for parsing: {feed_type}")
-        return {
-            "feed_type": "Unknown",
+        logger.error(f"Unknown feed type for parsing: {feedType}")
+        return {"feed_type": "Unknown"}
+
+
+
+# ============================================================
+# RDF PARSER
+# ============================================================
+
+# RSS 1.0 namespaces
+RDF_NS = "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}"
+RSS_1_0_NS = "{http://purl.org/rss/1.0/}"
+DC_NS = "{http://purl.org/dc/elements/1.1/}"  # Dublin Core (often used in RSS 1.0)
+
+
+def parse_rdf_channel(RSStree, path):
+    """
+    Parse an RSS 1.0 (RDF) feed into a channel dict.
+
+    RSS 1.0 is structurally different from RSS 2.0:
+    - Root is <rdf:RDF>
+    - <channel> and <item> are siblings
+    - Tags are namespaced with the RSS 1.0 namespace
+    - Items are referenced via <items><rdf:Seq><rdf:li>
+
+    Returns a dict with the same shape as an RSS 2.0 channel
+    (so the rest of the app doesn't need to know the difference).
+    """
+    logger.info(f"Parsing RSS 1.0 (RDF) feed from {path}")
+
+    root = RSStree.getroot()
+
+    channel = {
+        "version": "1.0",
+        "feed_type": "RSS",
+        "title": "",
+        "link": "",
+        "description": "",
+        "language": "",
+        "last_build_date": "",
+        "pub_date": "",
+        "generator": "",
+        "copyright": "",
+        "docs": "",
+        "managing_editor": "",
+        "web_master": "",
+        "categories": [],
+        "image": None,
+        "items": [],
+    }
+
+    # --- Channel (namespaced) ---
+    channel_elem = root.find(f"{RSS_1_0_NS}channel")
+    if channel_elem is None:
+        logger.error(f"No <channel> found in RDF feed: {path}")
+        return channel
+
+    channel["title"] = _text(channel_elem, f"{RSS_1_0_NS}title")
+    channel["link"] = _text(channel_elem, f"{RSS_1_0_NS}link")
+    channel["description"] = _text(channel_elem, f"{RSS_1_0_NS}description")
+
+    # Some RSS 1.0 feeds use Dublin Core for dates/copyright
+    channel["last_build_date"] = _text(channel_elem, f"{DC_NS}date")
+    channel["copyright"] = _text(channel_elem, f"{DC_NS}rights")
+    channel["language"] = _text(channel_elem, f"{DC_NS}language")
+
+    # Categories (RSS 1.0 uses the same category element)
+    for cat_elem in channel_elem.findall(f"{RSS_1_0_NS}category"):
+        channel["categories"].append({
+            "name": cat_elem.text.strip() if cat_elem.text else "",
+            "domain": cat_elem.attrib.get("domain", ""),
+        })
+
+    # Image (nested, namespaced)
+    image_elem = channel_elem.find(f"{RSS_1_0_NS}image")
+    if image_elem is not None:
+        # Image can be a reference or inline
+        # If it's a reference, we'd need to resolve rdf:resource — skip for now
+        channel["image"] = {
+            "url": _text(image_elem, f"{RSS_1_0_NS}url"),
+            "title": _text(image_elem, f"{RSS_1_0_NS}title"),
+            "link": _text(image_elem, f"{RSS_1_0_NS}link"),
+            "description": _text(image_elem, f"{RSS_1_0_NS}description"),
+            "width": 88,
+            "height": 31,
         }
 
+    # --- Items (siblings of channel, namespaced) ---
+    for item_elem in root.findall(f"{RSS_1_0_NS}item"):
+        item = _parse_rdf_item(item_elem, channel["title"])
+        channel["items"].append(item)
+
+    logger.info(f"Finished parsing RSS 1.0 channel: {channel['title']} ({len(channel['items'])} items)")
+    return channel
+
+
+def _parse_rdf_item(item_elem, feed_title):
+    """Parse a single RSS 1.0 <item>."""
+    rss_guid = _text(item_elem, f"{RSS_1_0_NS}link")
+    if not rss_guid:
+        rss_guid = item_elem.attrib.get(f"{RDF_NS}about", "")
+    if not rss_guid:
+        rss_guid = str(uuid.uuid4())
+
+    item = {
+        "title": _text(item_elem, f"{RSS_1_0_NS}title"),
+        "link": _text(item_elem, f"{RSS_1_0_NS}link"),
+        "description": _text(item_elem, f"{RSS_1_0_NS}description"),
+        "pub_date": _text(item_elem, f"{DC_NS}date"),
+        "guid": rss_guid,
+        "author": _text(item_elem, f"{DC_NS}creator"),
+        "comments": _text(item_elem, f"{RSS_1_0_NS}comments"),
+        "content_encoded": "",
+        "source": "",
+        "categories": [],
+        "enclosure": None,
+    }
+
+    # Categories on items
+    for cat_elem in item_elem.findall(f"{RSS_1_0_NS}category"):
+        item["categories"].append({
+            "name": cat_elem.text.strip() if cat_elem.text else "",
+            "domain": cat_elem.attrib.get("domain", ""),
+        })
+
+    return item
+
+
+def _text(parent, tag):
+    """Safely get text content of a namespaced child element."""
+    elem = parent.find(tag)
+    if elem is not None and elem.text:
+        return elem.text.strip()
+    return ""
 
 # ============================================================
 # RSS PARSER
