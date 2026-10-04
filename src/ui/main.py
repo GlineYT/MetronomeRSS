@@ -32,7 +32,7 @@ profile_data = src.util.load_profiles.load_profiles_from_directory(PROFILE_DIREC
 profiles = {name: info["color_hex"] for name, info in profile_data.items()}
 logger.info(f"Loaded {len(profiles)} profiles: {list(profiles.keys())}")
 
-# --- THE STATE DICT (single source of truth) ---
+# --- THE STATE DICT---
 state = {
     # Global UI stuff
     "screen": screen,

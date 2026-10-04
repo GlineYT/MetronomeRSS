@@ -128,6 +128,7 @@ def draw(state, mouse_pos, clicked, events):
 
             state["selected_profile"] = selected_profile
             state["selected_profile_data"] = profile_info["data"]
+            state["selected_profile_path"] = profile_info["file_path"]#Save the file path
 
             color = profile_info["data"]["preferences"]["color_theme"]
             state["accent_color"] = (color["r"], color["g"], color["b"])

@@ -9,12 +9,15 @@ from src.ui.components import sidebar
 from src.ui.components import item_tile
 from src.ui.components import modal
 from src.ui.components import text_input
+from src.ui.components import checkbox
 
 from src.parser import pipeline
 
 from src.util import strip_html
 
 from src.net import downloader
+
+from src.user import config_crud
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +27,6 @@ TILE_SIZE = 300
 TILE_GAP = 10
 COLS = 6
 CONTENT_TOP = 60  # Below the navbar
-
 
 
 
@@ -51,26 +53,50 @@ def _extract_items(parsed_feed):
 
 
 def _load_feeds(state):
-    """Parse feeds for the current profile and store items in state."""
-    path = state.get("current_feed_location", "")
-
-    if not path:
-        logger.info("No feed loaded yet — starting with empty item list")
+    """Load and parse all saved feeds from the current profile."""
+    profile_path = state.get("selected_profile_path")
+    if not profile_path:
+        logger.warning("No profile path — cannot load feeds")
         state["feed_items"] = []
-        state["feed_title"] = ""
+        state["feed_title"] = "(no profile)"
         return
 
-    if not Path(path).exists():
-        logger.warning(f"Feed path does not exist: {path}")
+    # --- Get saved feed URLs from the profile ---
+    feeds = config_crud.update_user_data(profile_path, "feeds", "read")
+    if not feeds:
+        logger.info("No saved feeds — starting with empty list")
         state["feed_items"] = []
-        state["feed_title"] = ""
+        state["feed_title"] = "All RSS feeds"
         return
 
-    parsed = _parse_feed(path)
-    state["feed_items"] = _extract_items(parsed)
-    if parsed and "rss" in parsed:
-        state["feed_title"] = parsed["rss"].get("title", "")
-    logger.info(f"Loaded {len(state['feed_items'])} items from {path}")
+    tmp_dir = Path(state["profile_directory"]) / "tmp"
+    all_items = []
+
+    for feed_entry in feeds:
+        url = feed_entry.get("link") if isinstance(feed_entry, dict) else feed_entry
+        if not url:
+            continue
+
+        logger.info(f"Loading feed: {url}")
+
+        # --- Download ---
+        paths, error = downloader.downloadRSS([url], destination=tmp_dir)
+        if error != downloader.INF_DL_ALL_OK or not paths:
+            logger.error(f"Failed to download {url}: {error}")
+            continue
+
+        # --- Parse ---
+        parsed = pipeline.init_pipeline(paths[0])
+        if parsed is None:
+            logger.error(f"Failed to parse {paths[0]}")
+            continue
+
+        # --- Extract items ---
+        all_items.extend(_extract_items(parsed))
+
+    state["feed_items"] = all_items
+    state["feed_title"] = f"All RSS feeds ({len(feeds)} feeds)"
+    logger.info(f"Loaded {len(all_items)} items from {len(feeds)} feeds")
 
 def _setup_item_layout(state, content_x, content_y):
     """Compute absolute positions of all item tiles."""
@@ -91,7 +117,6 @@ def init(state):
     state["selected_section"] = "All RSS feeds"
 
     # Feed data
-    state["current_feed_location"] = ""
     state["feed_items"] = []
     state["feed_title"] = ""
     state["feed_item_layout"] = []
@@ -102,17 +127,18 @@ def init(state):
     state["modal_description"] = ""
     state["modal_rect"] = None
 
-    #netio state
-    state["downloading_feed"] =  False
+    # Net I/O state
+    state["downloading_feed"] = False
     state["download_text_buffer"] = [""]
     state["download_error"] = None
 
-    # Load feeds immediately
-    _load_feeds(state)
-
-    #Screen State
+    # Screen state
     state["block_background_input"] = False
     state["block_hover"] = False
+    #Checkbox states
+    state["checkbox_add_to_feedlist"] = False
+
+    _load_feeds(state)
 
 def _draw_download_overlay(state, mouse_pos, clicked, events):
     """Draws the download URL input overlay."""
@@ -133,6 +159,14 @@ def _draw_download_overlay(state, mouse_pos, clicked, events):
     )
     prompt_rect = prompt_surf.get_rect(center=(screen.get_width() // 2, 400))
     screen.blit(prompt_surf, prompt_rect)
+
+    # --- Checkbox ---
+    feed_add_checkbox = checkbox.draw_checkbox(
+        screen,
+        screen.get_width() // 2 - 320,525,
+        "Save to feeds?",state,"checkbox_add_to_feedlist",
+        font,mouse_pos,clicked)
+
 
     # --- Text input ---
     result = text_input.draw_text_input(
@@ -155,39 +189,52 @@ def _draw_download_overlay(state, mouse_pos, clicked, events):
         _perform_download(state, url)
         state["block_background_input"] = False
         state["block_hover"] = False
+        if state["checkbox_add_to_feedlist"]:
+            logger.info(f"Saving url {url} to user's rss feed list")
+            config_crud.add_feed_to_profile(state["selected_profile_path"], url)
+            state["checkbox_add_to_feedlist"] = False
+
 
     # --- Handle cancel (Escape key) ---
     for event in events:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            # --- Reset state ---
             state["downloading_feed"] = False
             state["download_error"] = None
             state["download_text_buffer"][0] = ""
             state["block_background_input"] = False
             state["block_hover"] = False
+            state["checkbox_add_to_feedlist"] = False
             return
 
 def _perform_download(state, url):
-    """Download a feed from a URL and refresh the feed list."""
     logger.info(f"Downloading feed: {url}")
-
-    # Where to put it: profile_directory/tmp/
     tmp_dir = Path(state["profile_directory"]) / "tmp"
-
     paths, error_code = downloader.downloadRSS([url], destination=tmp_dir)
 
-    if error_code == downloader.INF_DL_ALL_OK and paths:
-        logger.info(f"Downloaded {len(paths)} file(s): {paths}")
-        state["download_error"] = None
-        state["downloading_feed"] = False
-        state["download_text_buffer"][0] = ""
-        state["current_feed_location"] = paths[0]
-
-        # Refresh the feed list
-        _load_feeds(state)
-    else:
+    if error_code != downloader.INF_DL_ALL_OK or not paths:
         logger.error(f"Download failed: {error_code}")
         state["download_error"] = f"Download failed: {error_code}"
         state["download_text_buffer"][0] = ""
+        return
+
+    logger.info(f"Downloaded: {paths[0]}")
+
+    # --- Optionally save to profile ---
+    if state["checkbox_add_to_feedlist"]:
+        profile_path = state.get("selected_profile_path")
+        if profile_path:
+            logger.info(f"Saving url to profile: {url}")
+            config_crud.add_feed_to_profile(profile_path, url)
+            state["checkbox_add_to_feedlist"] = False
+        else:
+            logger.error("No profile path — cannot save feed")
+
+    # --- Refresh the feed list ---
+    state["download_error"] = None
+    state["downloading_feed"] = False
+    state["download_text_buffer"][0] = ""
+    _load_feeds(state)
 
 def draw(state, mouse_pos, clicked, events):
     screen = state["screen"]
