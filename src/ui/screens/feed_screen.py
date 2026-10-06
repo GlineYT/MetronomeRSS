@@ -15,6 +15,7 @@ from src.ui.components import topbar
 from src.parser import pipeline
 
 from src.util import strip_html
+from src.util import date_parser
 
 from src.net import downloader
 
@@ -55,15 +56,8 @@ def _extract_items(parsed_feed):
             description = strip_html._strip_html(item.get("description", ""))
             pub_date = item.get("pub_date", "")
 
-            # Split pub_date into date and time if it looks like an RFC822 string
-            date_str = pub_date
-            time_str = ""
-            if pub_date and " " in pub_date:
-                parts = pub_date.split(" ")
-                if len(parts) >= 5:
-                    # "Tue, 26 Oct 2004 14:01:01 -0500" -> date: "26 Oct 2004", time: "14:01"
-                    date_str = f"{parts[1]} {parts[2]} {parts[3]}"
-                    time_str = parts[4][:5]  # "14:01"
+            # Normalize the date string using the utility
+            date_str, time_str = date_parser.parse_feed_date(pub_date)
 
             metadata = {
                 "source": channel_title,
