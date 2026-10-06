@@ -10,6 +10,7 @@ from src.ui.components import item_tile
 from src.ui.components import modal
 from src.ui.components import text_input
 from src.ui.components import checkbox
+from src.ui.components import topbar
 
 from src.parser import pipeline
 
@@ -264,68 +265,67 @@ def draw(state, mouse_pos, clicked, events):
     small_font = state["font"]
     accent = state.get("accent_color", state["button_color"])
     profile_name = state["selected_profile"]
+    section = state.get("selected_section", "All RSS feeds")
 
-    # --- MODAL GATE (if a modal is open, its input is the ONLY input) ---
+    # MODAL
     if state["show_modal"]:
-            # Advance the marquee scroll if the title is too long
-            title_font = pygame.font.SysFont("Arial", 32, bold=True)
-            title_w = title_font.size(state["modal_title"])[0]
-            title_available = MODAL_WIDTH - MODAL_PADDING * 2 - 60 - 10  # approx
-            if title_w > title_available:
-                state["modal_title_scroll"] += 1
-                if state["modal_title_scroll"] > title_w:
-                    state["modal_title_scroll"] = 0
+        topbar.draw_topbar(
+            screen, accent,
+            f"{profile_name} — {section}",
+            title_font, button_font,
+            mouse_pos, clicked,
+        )
+        is_closed, modal_rect = modal.draw_modal(
+            screen,
+            state["modal_title"],
+            state["modal_description"],
+            state["modal_metadata"],
+            mouse_pos,
+            clicked,
+            accent,
+        )
+        state["modal_rect"] = modal_rect
+        if is_closed:
+            state["show_modal"] = False
+            state["modal_rect"] = None
+        return
 
-                is_closed, modal_rect = modal.draw_modal(
-                    screen,
-                    state["modal_title"],
-                    state["modal_description"],
-                    state["modal_metadata"],
-                    mouse_pos,
-                    clicked,
-                    accent,
-                )
-            state["modal_rect"] = modal_rect
-            if is_closed:
-                state["show_modal"] = False
-                state["modal_rect"] = None
-            return
+    #DOWNLOAD OVERLAY
+    if state["downloading_feed"]:
+        topbar.draw_topbar(
+            screen, accent,
+            f"{profile_name} — Download/Add RSS Feed",
+            title_font, button_font,
+            mouse_pos, clicked,
+        )
+        _draw_download_overlay(state, mouse_pos, clicked, events)
+        return
 
-    # --- TOP BAR ---
-    navbar = pygame.Rect(0, 0, screen.get_width(), 50)
-    pygame.draw.rect(screen, accent, navbar)
 
-    # --- HAMBURGER TOGGLE ---
-    toggle_rect = pygame.Rect(10, 10, 30, 30)
-    if toggle_rect.collidepoint(mouse_pos):
-        pygame.draw.rect(screen, (255, 255, 255), toggle_rect, 2)
-    for j in range(3):
-        pygame.draw.rect(screen, (255, 255, 255), (14, 15 + j * 8, 22, 3))
-    if toggle_rect.collidepoint(mouse_pos) and clicked:
+    #NORMAL MODE
+
+    bar = topbar.draw_topbar(
+        screen, accent,
+        f"{profile_name} — {section}",
+        title_font, button_font,
+        mouse_pos, clicked,
+        show_hamburger=True,
+        show_back=True,
+        action_buttons=[
+            ("Download", "download"),
+            ("Reload", "reload"),
+        ],
+    )
+
+    # --- HANDLE TOPBAR INTERACTIONS ---
+    # The "block_background_input" flag means an overlay (like the sidebar) is
+    # temporarily capturing input, so topbar clicks should be ignored.
+    input_locked = state["sidebar_open"] or state["block_background_input"]
+
+    if bar["hamburger"] and not input_locked:
         state["sidebar_open"] = not state["sidebar_open"]
 
-     # --- DOWNLOAD BUTTON (next to Reload) ---
-    download_button = button.draw_button(
-        screen, screen.get_width() - 230, 5, "Download", button_font,
-        mouse_pos, clicked, accent_color=accent
-    )
-    if download_button and not state["sidebar_open"] and not state["block_background_input"]:
-        state["downloading_feed"] = True
-        state["download_text_buffer"][0] = ""
-
-    # --- RELOAD BUTTON ---
-    reload_button = button.draw_button(
-        screen, screen.get_width() - 100, 5, "Reload", button_font,
-        mouse_pos, clicked, accent_color=accent
-    )
-    if reload_button and not state["sidebar_open"] and not state["block_background_input"]:
-        _load_feeds(state)
-
-    # --- BACK BUTTON ---
-    back_button = button.draw_button(
-        screen, 55, 5, "Back", button_font, mouse_pos, clicked, accent
-    )
-    if back_button and not state["sidebar_open"] and not state["block_background_input"]:
+    if bar["back"] and not input_locked:
         logger.info("Returning to PROFILE_SELECT")
         state["current_screen"] = "PROFILE_SELECT"
         state["selected_profile"] = None
@@ -333,17 +333,18 @@ def draw(state, mouse_pos, clicked, events):
         profile_select.init(state)
         return
 
-    # --- TITLE ---
-    section = state.get("selected_section", "All RSS feeds")
-    title_surf = title_font.render(f"{profile_name} — {section}", True, (255, 255, 255))
-    title_rect = title_surf.get_rect(center=(screen.get_width() // 2, 25))
-    screen.blit(title_surf, title_rect)
+    if bar["actions"].get("download") and not input_locked:
+        state["downloading_feed"] = True
+        state["download_text_buffer"][0] = ""
 
-    # --- CONTENT AREA (Item tiles) ---
+    if bar["actions"].get("reload") and not input_locked:
+        _load_feeds(state)
+
+    # CONTENT AREA (Item tiles)
+
     content_x = int(screen.get_width() * sidebar.SIDEBAR_WIDTH_RATIO) if state["sidebar_open"] else 20
     content_y = CONTENT_TOP + 10
 
-    # Recompute layout when the sidebar opens/closes or item count changes
     layout_stale = (
         not state["feed_item_layout"]
         or len(state["feed_item_layout"]) != len(state["feed_items"])
@@ -351,8 +352,7 @@ def draw(state, mouse_pos, clicked, events):
     if layout_stale:
         _setup_item_layout(state, content_x, content_y)
 
-    # "Effective" input: when the sidebar is open, item tiles shouldn't respond
-    # to hover or clicks (they're behind the dim overlay).
+    # "Effective" input: suppress tile hover/clicks when the sidebar is open
     if state["sidebar_open"] or state["block_hover"]:
         effective_mouse = (-1, -1)
         effective_clicked = False
@@ -360,30 +360,27 @@ def draw(state, mouse_pos, clicked, events):
         effective_mouse = mouse_pos
         effective_clicked = clicked
 
-    # Draw tiles + handle clicks
     clicked_item = None
     for tile_data in state["feed_item_layout"]:
         x, y, w, h, item_title, item_desc, item_meta = tile_data
-
         if y > screen.get_height():
             continue
-
         if item_tile.draw_item_tile(
             screen, x, y, item_title, item_desc,
             effective_mouse, effective_clicked, accent, size=TILE_SIZE
         ):
             clicked_item = (item_title, item_desc, item_meta)
 
-    # Open modal on click
     if clicked_item and not state["block_background_input"]:
         state["show_modal"] = True
         state["modal_title"] = clicked_item[0]
         state["modal_description"] = clicked_item[1]
         state["modal_metadata"] = clicked_item[2]
-        state["modal_title_scroll"] = 0     # reset marquee
-        clicked = False  # eat the click so nothing else sees it
+        state["modal_title_scroll"] = 0
+        clicked = False
 
-    # --- SIDEBAR (drawn last, on top of everything, with its own dim) ---
+    # SIDEBAR (drawn last, on top of everything, with its own dim)
+
     if not state["block_background_input"]:
         sidebar_result = sidebar.draw_sidebar(
             screen, button_font, small_font,
@@ -392,7 +389,6 @@ def draw(state, mouse_pos, clicked, events):
 
         if sidebar_result == "CLOSE":
             state["sidebar_open"] = False
-            # Sidebar changed width — recompute layout for the wider content area
             _setup_item_layout(state, 20, CONTENT_TOP + 10)
         elif sidebar_result == "Quit":
             sys.exit(0)
