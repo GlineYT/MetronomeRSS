@@ -28,6 +28,11 @@ TILE_GAP = 10
 COLS = 6
 CONTENT_TOP = 60  # Below the navbar
 
+# --- Modal layout constants ---
+MODAL_WIDTH = 700
+MODAL_HEIGHT = 600
+MODAL_PADDING = 20
+
 
 
 def _parse_feed(path):
@@ -36,21 +41,37 @@ def _parse_feed(path):
 
 
 def _extract_items(parsed_feed):
-    """Extract (title, description) tuples from a parsed feed dict."""
+    """Extract (title, description, metadata_dict) tuples from a parsed feed."""
     items = []
     if not parsed_feed:
         return items
 
     if parsed_feed.get("feed_type") == "RSS" and "rss" in parsed_feed:
         channel = parsed_feed["rss"]
+        channel_title = channel.get("title", "Unknown source")
         for item in channel.get("items", []):
             title = item.get("title", "Untitled")
             description = strip_html._strip_html(item.get("description", ""))
-            items.append((title, description))
-    # Atom parsing goes here later.
+            pub_date = item.get("pub_date", "")
 
+            # Split pub_date into date and time if it looks like an RFC822 string
+            date_str = pub_date
+            time_str = ""
+            if pub_date and " " in pub_date:
+                parts = pub_date.split(" ")
+                if len(parts) >= 5:
+                    # "Tue, 26 Oct 2004 14:01:01 -0500" -> date: "26 Oct 2004", time: "14:01"
+                    date_str = f"{parts[1]} {parts[2]} {parts[3]}"
+                    time_str = parts[4][:5]  # "14:01"
+
+            metadata = {
+                "source": channel_title,
+                "link": item.get("link", ""),
+                "time": time_str,
+                "date": date_str,
+            }
+            items.append((title, description, metadata))
     return items
-
 
 def _load_feeds(state):
     """Load and parse all saved feeds from the current profile."""
@@ -99,16 +120,14 @@ def _load_feeds(state):
     logger.info(f"Loaded {len(all_items)} items from {len(feeds)} feeds")
 
 def _setup_item_layout(state, content_x, content_y):
-    """Compute absolute positions of all item tiles."""
     layout = []
-    for i, (title, description) in enumerate(state["feed_items"]):
+    for i, (title, description, metadata) in enumerate(state["feed_items"]):
         col = i % COLS
         row = i // COLS
         x = content_x + col * (TILE_SIZE + TILE_GAP)
         y = content_y + row * (TILE_SIZE + TILE_GAP)
-        layout.append([x, y, TILE_SIZE, TILE_SIZE, title, description])
+        layout.append([x, y, TILE_SIZE, TILE_SIZE, title, description, metadata])
     state["feed_item_layout"] = layout
-
 
 def init(state):
     logger.info(f"Initializing feed screen for {state['selected_profile']}")
@@ -126,6 +145,8 @@ def init(state):
     state["modal_title"] = ""
     state["modal_description"] = ""
     state["modal_rect"] = None
+    state["modal_metadata"] = {}
+    state["modal_title_scroll"] = 0
 
     # Net I/O state
     state["downloading_feed"] = False
@@ -246,15 +267,29 @@ def draw(state, mouse_pos, clicked, events):
 
     # --- MODAL GATE (if a modal is open, its input is the ONLY input) ---
     if state["show_modal"]:
-        is_closed, modal_rect = modal.draw_modal(
-            screen, state["modal_title"], state["modal_description"],
-            mouse_pos, clicked, accent
-        )
-        state["modal_rect"] = modal_rect
-        if is_closed:
-            state["show_modal"] = False
-            state["modal_rect"] = None
-        return  # Don't draw anything else this frame — modal is on top
+            # Advance the marquee scroll if the title is too long
+            title_font = pygame.font.SysFont("Arial", 32, bold=True)
+            title_w = title_font.size(state["modal_title"])[0]
+            title_available = MODAL_WIDTH - MODAL_PADDING * 2 - 60 - 10  # approx
+            if title_w > title_available:
+                state["modal_title_scroll"] += 1
+                if state["modal_title_scroll"] > title_w:
+                    state["modal_title_scroll"] = 0
+
+                is_closed, modal_rect = modal.draw_modal(
+                    screen,
+                    state["modal_title"],
+                    state["modal_description"],
+                    state["modal_metadata"],
+                    mouse_pos,
+                    clicked,
+                    accent,
+                )
+            state["modal_rect"] = modal_rect
+            if is_closed:
+                state["show_modal"] = False
+                state["modal_rect"] = None
+            return
 
     # --- TOP BAR ---
     navbar = pygame.Rect(0, 0, screen.get_width(), 50)
@@ -328,9 +363,8 @@ def draw(state, mouse_pos, clicked, events):
     # Draw tiles + handle clicks
     clicked_item = None
     for tile_data in state["feed_item_layout"]:
-        x, y, w, h, item_title, item_desc = tile_data
+        x, y, w, h, item_title, item_desc, item_meta = tile_data
 
-        # Simple culling: skip tiles fully below the visible area
         if y > screen.get_height():
             continue
 
@@ -338,18 +372,15 @@ def draw(state, mouse_pos, clicked, events):
             screen, x, y, item_title, item_desc,
             effective_mouse, effective_clicked, accent, size=TILE_SIZE
         ):
-            clicked_item = (item_title, item_desc)
-
-    # If the download overlay is open, it owns input for this frame
-    if state["downloading_feed"]:
-        _draw_download_overlay(state, mouse_pos, clicked, events)
-        return
+            clicked_item = (item_title, item_desc, item_meta)
 
     # Open modal on click
     if clicked_item and not state["block_background_input"]:
         state["show_modal"] = True
         state["modal_title"] = clicked_item[0]
         state["modal_description"] = clicked_item[1]
+        state["modal_metadata"] = clicked_item[2]
+        state["modal_title_scroll"] = 0     # reset marquee
         clicked = False  # eat the click so nothing else sees it
 
     # --- SIDEBAR (drawn last, on top of everything, with its own dim) ---
