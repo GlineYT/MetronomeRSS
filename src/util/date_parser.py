@@ -73,7 +73,7 @@ def parse_feed_date(raw: str) -> tuple[str, str]:
 
     # --- Still nothing? Give up gracefully. ---
     if dt is None:
-        logger.warning(f"Could not parse date string: {raw!r}")
+        logger.error(f"Could not parse date string: {raw!r}")
         return "", ""
 
     # --- Normalize timezone: convert to UTC for consistency ---

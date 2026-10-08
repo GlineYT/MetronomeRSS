@@ -6,7 +6,7 @@ import socket
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import urlretrieve
-
+from urllib.parse import urlparse
 logger = logging.getLogger(__name__)
 
 socket.setdefaulttimeout(30)  # 30 second timeout for all socket (in this case network) operations
@@ -61,7 +61,7 @@ def downloadRSS(urllist, destination=None):
             continue
 
         # --- Derive a filename from the URL ---
-        filename = os.path.basename(url.split("?")[0]) or "feed.xml"
+        filename = url_to_filename(url)
         target = dest_path / filename
 
         logger.info(f"Downloading: {url} -> {target}")
@@ -90,3 +90,33 @@ def downloadRSS(urllist, destination=None):
 
     logger.info(f"Download complete: {len(file_paths)}/{len(urllist)} succeeded")
     return file_paths, last_error
+
+def url_to_filename(url: str) -> str:
+    """
+    Convert a URL into a filesystem-safe filename.
+
+    Example:
+        "https://rss.dw.com/rdf/rss-en-all"
+        -> "rss.dw.com_rdf_rss-en-all"
+    """
+    # Strip scheme (https://, http://, file://, etc.)
+    parsed = urlparse(url)
+    netloc = parsed.netloc  # "rss.dw.com"
+    path = parsed.path.strip("/")  # "rdf/rss-en-all"
+    query = parsed.query  # "?foo=bar" (optional)
+
+    # Combine netloc + path, replace separators with underscore
+    combined = f"{netloc}_{path}" if path else netloc
+
+    # Replace illegal filesystem characters
+    combined = combined.replace("/", "_").replace("?", "_").replace("&", "_")
+
+    # Optional: include query params (rare for feeds)
+    if query:
+        combined += "_" + query.replace("=", "-").replace("&", "_")
+
+    # Fallback if URL was weird
+    if not combined:
+        combined = "feed"
+
+    return combined
