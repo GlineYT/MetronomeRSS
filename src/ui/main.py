@@ -80,6 +80,10 @@ while running:
                 if current_time - state["last_click_time"] > state["click_cooldown"]:
                     clicked = True
                     state["last_click_time"] = current_time
+        elif event.type == pygame.MOUSEWHEEL:
+                state["scroll_offset"] -= event.y * 60  # 60px per notch
+                if state["scroll_offset"] < 0:
+                    state["scroll_offset"] = 0
 
     screen.fill("#333333")
 

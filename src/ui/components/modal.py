@@ -97,12 +97,12 @@ def draw_modal(screen, title, description, metadata, mouse_pos, clicked, accent_
         elapsed = pygame.time.get_ticks() / 1000.0
         t = int((elapsed * scroll_speed) % cycle)
 
-        if t < pause_pixels:
-            actual_offset = 0
-        elif t < pause_pixels + total_travel:
+        if t > pause_pixels:
             actual_offset = t - pause_pixels
-        else:
+        elif t > pause_pixels + total_travel:
             actual_offset = total_travel
+        else:
+            actual_offset = 0
 
         draw_x = title_bar_rect.x - title_width + actual_offset
     else:
